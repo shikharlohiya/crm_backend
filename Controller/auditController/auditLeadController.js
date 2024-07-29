@@ -430,21 +430,97 @@ exports.getAuditLeadRemarksByLotNumber = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+// exports.getSupervisorDashboard = async (req, res) => {
+//     try {
+//       // Fetch all agents
+//       const agents = await Employee.findAll({
+//         attributes: [ 'EmployeeName', 'EmployeeRegion'],
+//         where: {
+//           EmployeeRoleId: 100
+//         }
+//       });
+  
+//       const dashboardData = await Promise.all(agents.map(async (agent) => {
+//         const mappedRegions = agent.EmployeeRegion.split(',').map(region => region.trim());
+  
+//         // Fetch audit leads for the agent
+//         const auditLeads = await AuditLeadDetail.findAll({
+//           where: {
+//             Zone_Name: {
+//               [Op.in]: mappedRegions
+//             }
+//           },
+//           include: [
+//             {
+//               model: AuditLeadRemark,
+//               as: 'AuditRemarks',
+//               include: [
+//                 {
+//                   model: Employee,
+//                   as: 'Agent',
+//                   attributes: ['EmployeeName']
+//                 }
+//               ]
+//             }
+//           ]
+//         });
+  
+//         // Calculate counts
+//         const openCount = auditLeads.filter(lead => lead.status === 'open').length;
+//         const closedCount = auditLeads.filter(lead => lead.status === 'closed').length;
+//         const workingCount = auditLeads.filter(lead => lead.status === 'working').length;
+  
+//         // Collect all remarks
+//         const remarks = auditLeads.flatMap(lead => 
+//           lead.AuditRemarks.map(remark => ({
+//             lotNumber: lead.Lot_Number,
+//             remark: remark.REMARKS,
+//             date: remark.DATE,
+//             agentName: remark.Agent.EmployeeName
+//           }))
+//         );
+  
+//         return {
+//           agentId: agent.id,
+//           agentName: agent.EmployeeName,
+//           mappedRegions: mappedRegions,
+//           totalLeads: auditLeads.length,
+//           openCount,
+//           closedCount,
+//           workingCount,
+//           remarks
+//         };
+//       }));
+  
+//       res.status(200).json({
+//         success: true,
+//         data: dashboardData
+//       });
+  
+//     } catch (error) {
+//       console.error('Error fetching supervisor dashboard:', error);
+//       res.status(500).json({ message: 'Internal server error' });
+//     }
+//   };
 exports.getSupervisorDashboard = async (req, res) => {
     try {
       // Fetch all agents
       const agents = await Employee.findAll({
-        attributes: [ 'EmployeeName', 'EmployeeRegion'],
+        attributes: ['EmployeeName', 'EmployeeRegion'],
         where: {
           // Add any condition to filter employees who are agents
           // For example: Role: 'Agent'
+          EmployeeRoleID : 100
         }
       });
   
       const dashboardData = await Promise.all(agents.map(async (agent) => {
-        const mappedRegions = agent.EmployeeRegion.split(',').map(region => region.trim());
+        // Add null check for EmployeeRegion
+        const mappedRegions = agent.EmployeeRegion 
+          ? agent.EmployeeRegion.split(',').map(region => region.trim())
+          : [];
   
-        // Fetch audit leads for the agent
+        // Rest of the code remains the same
         const auditLeads = await AuditLeadDetail.findAll({
           where: {
             Zone_Name: {
@@ -504,3 +580,37 @@ exports.getSupervisorDashboard = async (req, res) => {
     }
   };
 
+
+
+  exports.updateAuditLeadStatus = async (req, res) => {
+    try {
+      const { lotNumber, newStatus } = req.body;
+  
+      if (!lotNumber || !newStatus) {
+        return res.status(400).json({ message: 'Lot number and new status are required' });
+      }
+  
+      if (!['open', 'working', 'closed'].includes(newStatus)) {
+        return res.status(400).json({ message: 'Invalid status. Must be open, working, or closed' });
+      }
+  
+      const auditLead = await AuditLeadDetail.findByPk(lotNumber);
+  
+      if (!auditLead) {
+        return res.status(404).json({ message: 'Audit lead not found' });
+      }
+  
+      auditLead.status = newStatus;
+      await auditLead.save();
+  
+      res.status(200).json({
+        success: true,
+        message: 'Audit lead status updated successfully',
+        data: auditLead
+      });
+  
+    } catch (error) {
+      console.error('Error updating audit lead status:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };

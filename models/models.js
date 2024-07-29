@@ -41,7 +41,7 @@ const AuditLeadRemark = require('./AuditLeadRemark.js');
  
 
 // lead_Meeting.sync({alter:true});
-  //  Campaign.sync({force:true});
+  //  AuditLeadRemark.sync({force:true});
   // Employee_Campaign.sync({force:true});
   // Lead_Detail.sync({alter: true})
 
