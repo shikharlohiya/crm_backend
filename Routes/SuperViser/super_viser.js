@@ -13,4 +13,5 @@ router.get('/bdm/lead-meetings',auth, SupervisorController.getLeadMeetingsForSup
 router.get('/bdm/estimation',auth, SupervisorController.getLeadEstimationsForSupervisor);
 router.post('/upload-leads', upload.single('file'),auth, SupervisorController.uploadLeads);
 router.get('/get/leads',auth, SupervisorController.getLeads);
+
 module.exports = router;

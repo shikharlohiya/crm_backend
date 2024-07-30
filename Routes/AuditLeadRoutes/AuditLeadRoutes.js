@@ -5,13 +5,16 @@ const AuditController = require('../../Controller/auditController/auditLeadContr
 
 
 
+
+
 const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 router.post('/upload-audit-leads', upload.single('file'), auth, AuditController.uploadAuditLeads);
 router.get('/audit-leads', auth, AuditController.getAuditLeads);
 router.post('/audit-remarks' , auth, AuditController.createAuditLeadRemark)
 router.get('/get-audit-remarks/:lotNumber' , auth, AuditController.getAuditLeadRemarksByLotNumber)
-router.get('/supervisor-dashboard', AuditController.getSupervisorDashboard);
-router.put('/update-status', AuditController.updateAuditLeadStatus);
+router.get('/supervisor-dashboard',auth, AuditController.getSupervisorDashboard);
+router.put('/update-status',auth, AuditController.updateAuditLeadStatus);
+router.get('/all/leads',auth,AuditController.getAllLeadsForSupervisor );
 
 module.exports = router;

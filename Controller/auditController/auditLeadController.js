@@ -614,4 +614,44 @@ exports.getSupervisorDashboard = async (req, res) => {
       res.status(500).json({ message: 'Internal server error' });
     }
   };
+ 
+
+
+  exports.getAllLeadsForSupervisor = async (req, res) => {
+    try {
+      const { 
+        page = 1, 
+        limit = 10, 
+        region, 
+        status,
+        sortBy = 'updatedAt',
+        sortOrder = 'DESC'
+      } = req.query;
+      
+      const offset = (page - 1) * limit;
+      
+      let whereClause = {};
+      if (region) whereClause.Zone_Name = region;
+      if (status) whereClause.status = status;
   
+      const { count, rows: auditLeads } = await AuditLeadDetail.findAndCountAll({
+        where: whereClause,
+        order: [[sortBy, sortOrder]],
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      });
+  
+      
+  
+      res.status(200).json({
+        data: auditLeads,
+        totalCount: count,
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(count / limit),
+       
+      });
+    } catch (error) {
+      console.error('Error retrieving audit leads:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  };
