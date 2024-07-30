@@ -13,5 +13,5 @@ router.post('/audit-remarks' , auth, AuditController.createAuditLeadRemark)
 router.get('/get-audit-remarks/:lotNumber' , auth, AuditController.getAuditLeadRemarksByLotNumber)
 router.get('/supervisor-dashboard', AuditController.getSupervisorDashboard);
 router.put('/update-status', AuditController.updateAuditLeadStatus);
- 
+
 module.exports = router;
