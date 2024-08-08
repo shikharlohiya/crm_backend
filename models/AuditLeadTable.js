@@ -6,6 +6,7 @@
 // module.exports = AuditLeadTable;
 
 
+
 const { Sequelize, DataTypes, Model } = require('sequelize');
 const sequelize = require('./index');
 

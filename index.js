@@ -15,7 +15,9 @@ const Confirmation = require('./Routes/Actions/confirmation.js');
 const SuperViser = require('./Routes/SuperViser/super_viser.js');
 const Audit = require('./Routes/AuditLeadRoutes/AuditLeadRoutes.js')
 const exotelRoutes = require('./Routes/exotel.js');
-const Region = require('./Routes/Region/RegionRoute.js')
+const Region = require('./Routes/Region/RegionRoute.js');
+const Incoming = require('./Controller/CallingAPI/incoming.js');
+const EndCall = require('./Controller/CallingAPI/CallEndApi.js');
  
 
 const cors = require('cors');
@@ -44,6 +46,8 @@ app.use('/api' , Confirmation);
 app.use('/api', SuperViser);
 app.use('/api', Audit);
 app.use('/api',Region);
+app.use('/api',Incoming);
+app.use('/api' ,EndCall );
  
 
 

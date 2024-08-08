@@ -13,7 +13,7 @@ router.put('/leads/:leadId/bdm-remarks', auth, BDMController.updateBDMRemarks);
 
 
 // router.patch('/estimations/:id/status', BDMController.updateEstimationStatus);
-router.patch('/estimations/:id/status', upload.single('document'), BDMController.updateEstimationStatus);
+router.patch('/estimations/:id/status', upload.single('document'),auth, BDMController.updateEstimationStatus);
 
 
 module.exports = router;

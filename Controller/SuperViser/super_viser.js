@@ -319,80 +319,149 @@ exports.getLeadsWithSiteVisitsForSupervisor = async (req, res) => {
 //   }
 // };
 
+//07-08-2024
+// exports.getLeadUpdatesByBDMForSupervisor = async (req, res) => {
+//     try {
+//       const { page = 1, limit = 10, date } = req.query;
+//       const offset = (page - 1) * limit;
+  
+//       const whereClause = {
+//         BDMId: { [Op.ne]: null },
+//       };
+//       if (date) {
+//         whereClause.createdAt = {
+//           [Op.gte]: new Date(date),
+//           [Op.lt]: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000),
+//         };
+//       }
+  
+//       const leads = await Lead_Detail.findAndCountAll({
+//         include: [
+//           { model: Employee, as: 'Agent' },
+//           { model: Employee, as: 'BDM' },
+//           { model: Employee, as: 'Superviser' },
+//           {
+//             model: LeadUpdate,
+//             as: 'Updates',
+//             where: whereClause,
+//             required: true,
+//             include: [{ model: Employee, as: 'BDM' }],
+//           },
+//         ],
+//         offset,
+//         limit: parseInt(limit),
+//       });
+//       const formattedLeads = leads.rows.map((lead) => ({
+//         ...lead.toJSON(),
+//         callOnDiscussionCount: lead.Updates ? lead.Updates.length : 0, // Check if lead.Updates exists
+//         // callOnDiscussions: lead.Updates ? lead.Updates.map((leadUpdate) => ({ // Check if lead.Updates exists
+//         //   id: leadUpdate.id,
+//         //   follow_up_date: leadUpdate.follow_up_date,
+//         //   category: leadUpdate.category,
+//         //   sub_category: leadUpdate.sub_category,
+//         //   remark: leadUpdate.remark,
+//         //   closure_month: leadUpdate.closure_month,
+//         //   BDMId: leadUpdate.BDMId,
+//         //   createdAt: leadUpdate.createdAt,
+//         //   updatedAt: leadUpdate.updatedAt,
+//         //   LeadDetailId: leadUpdate.LeadDetailId,
+//         //   AgentId: leadUpdate.AgentId,
+//         //   BDM: leadUpdate.BDM,
+//         // })) : [], // Provide an empty array when lead.Updates is undefined
+//       }));
+//       const bdmLeadUpdateCounts = await LeadUpdate.findAll({
+//         attributes: [
+//           'BDMId',
+//           [sequelize.fn('COUNT', sequelize.col('BDMId')), 'leadUpdateCount'],
+//         ],
+//         where: whereClause,
+//         group: ['BDMId'],
+//         include: [{ model: Employee, as: 'BDM', attributes: ['EmployeeName'] }],
+//       });
+  
+//       res.status(200).json({
+//         leads: formattedLeads,
+//         pagination: {
+//           total: leads.count,
+//           page: parseInt(page),
+//           limit: parseInt(limit),
+//         },
+//         bdmLeadUpdateCounts,
+//       });
+//     } catch (error) {
+//       console.error('Error retrieving lead updates by BDM for supervisor:', error);
+//       res.status(500).json({ message: 'Internal server error' });
+//     }
+//   };
+
 
 exports.getLeadUpdatesByBDMForSupervisor = async (req, res) => {
-    try {
-      const { page = 1, limit = 10, date } = req.query;
-      const offset = (page - 1) * limit;
-  
-      const whereClause = {
-        BDMId: { [Op.ne]: null },
+  try {
+    const { page = 1, limit = 10, date, startDate, endDate } = req.query;
+    const offset = (page - 1) * limit;
+
+    const whereClause = {
+      BDMId: { [Op.ne]: null },
+    };
+    
+    if (date) {
+      whereClause.createdAt = {
+        [Op.gte]: new Date(date),
+        [Op.lt]: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000),
       };
-      if (date) {
-        whereClause.createdAt = {
-          [Op.gte]: new Date(date),
-          [Op.lt]: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000),
-        };
-      }
-  
-      const leads = await Lead_Detail.findAndCountAll({
-        include: [
-          { model: Employee, as: 'Agent' },
-          { model: Employee, as: 'BDM' },
-          { model: Employee, as: 'Superviser' },
-          {
-            model: LeadUpdate,
-            as: 'Updates',
-            where: whereClause,
-            required: true,
-            include: [{ model: Employee, as: 'BDM' }],
-          },
-        ],
-        offset,
-        limit: parseInt(limit),
-      });
-      const formattedLeads = leads.rows.map((lead) => ({
-        ...lead.toJSON(),
-        callOnDiscussionCount: lead.Updates ? lead.Updates.length : 0, // Check if lead.Updates exists
-        // callOnDiscussions: lead.Updates ? lead.Updates.map((leadUpdate) => ({ // Check if lead.Updates exists
-        //   id: leadUpdate.id,
-        //   follow_up_date: leadUpdate.follow_up_date,
-        //   category: leadUpdate.category,
-        //   sub_category: leadUpdate.sub_category,
-        //   remark: leadUpdate.remark,
-        //   closure_month: leadUpdate.closure_month,
-        //   BDMId: leadUpdate.BDMId,
-        //   createdAt: leadUpdate.createdAt,
-        //   updatedAt: leadUpdate.updatedAt,
-        //   LeadDetailId: leadUpdate.LeadDetailId,
-        //   AgentId: leadUpdate.AgentId,
-        //   BDM: leadUpdate.BDM,
-        // })) : [], // Provide an empty array when lead.Updates is undefined
-      }));
-      const bdmLeadUpdateCounts = await LeadUpdate.findAll({
-        attributes: [
-          'BDMId',
-          [sequelize.fn('COUNT', sequelize.col('BDMId')), 'leadUpdateCount'],
-        ],
-        where: whereClause,
-        group: ['BDMId'],
-        include: [{ model: Employee, as: 'BDM', attributes: ['EmployeeName'] }],
-      });
-  
-      res.status(200).json({
-        leads: formattedLeads,
-        pagination: {
-          total: leads.count,
-          page: parseInt(page),
-          limit: parseInt(limit),
-        },
-        bdmLeadUpdateCounts,
-      });
-    } catch (error) {
-      console.error('Error retrieving lead updates by BDM for supervisor:', error);
-      res.status(500).json({ message: 'Internal server error' });
+    } else if (startDate && endDate) {
+      whereClause.createdAt = {
+        [Op.gte]: new Date(startDate),
+        [Op.lt]: new Date(new Date(endDate).getTime() + 24 * 60 * 60 * 1000),
+      };
     }
-  };
+
+    const leads = await Lead_Detail.findAndCountAll({
+      include: [
+        { model: Employee, as: 'Agent' },
+        { model: Employee, as: 'BDM' },
+        { model: Employee, as: 'Superviser' },
+        {
+          model: LeadUpdate,
+          as: 'Updates',
+          where: whereClause,
+          required: true,
+          include: [{ model: Employee, as: 'BDM' }],
+        },
+      ],
+      offset,
+      limit: parseInt(limit),
+    });
+
+    const formattedLeads = leads.rows.map((lead) => ({
+      ...lead.toJSON(),
+      callOnDiscussionCount: lead.Updates ? lead.Updates.length : 0,
+    }));
+
+    const bdmLeadUpdateCounts = await LeadUpdate.findAll({
+      attributes: [
+        'BDMId',
+        [sequelize.fn('COUNT', sequelize.col('BDMId')), 'leadUpdateCount'],
+      ],
+      where: whereClause,
+      group: ['BDMId'],
+      include: [{ model: Employee, as: 'BDM', attributes: ['EmployeeName'] }],
+    });
+
+    res.status(200).json({
+      leads: formattedLeads,
+      pagination: {
+        total: leads.count,
+        page: parseInt(page),
+        limit: parseInt(limit),
+      },
+      bdmLeadUpdateCounts,
+    });
+  } catch (error) {
+    console.error('Error retrieving lead updates by BDM for supervisor:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
 
 
 
@@ -480,6 +549,8 @@ exports.getLeadUpdatesByBDMForSupervisor = async (req, res) => {
 //   };
 
 
+
+
 exports.getLeadMeetingsForSupervisor = async (req, res) => {
   try {
     const { page = 1, limit = 10, date, startDate, endDate } = req.query;
@@ -552,9 +623,69 @@ exports.getLeadMeetingsForSupervisor = async (req, res) => {
 
  
 
+// exports.getLeadEstimationsForSupervisor = async (req, res) => {
+//   try {
+//     const { page = 1, limit = 10, date } = req.query;
+//     const offset = (page - 1) * limit;
+
+//     const whereClause = {};
+//     if (date) {
+//       whereClause.createdAt = {
+//         [Op.gte]: new Date(date),
+//         [Op.lt]: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000),
+//       };
+//     }
+
+//     const { count, rows: leads } = await Lead_Detail.findAndCountAll({
+//       include: [
+//         { model: Employee, as: 'Agent' },
+//         { model: Employee, as: 'BDM' },
+//         { model: Employee, as: 'Superviser' },
+//         {
+//           model: Campaign,
+//           as: 'Campaign',
+//           attributes: ['CampaignId', 'CampaignName'],
+//         },
+//         {
+//           model: estimation,
+//           as: 'estimations',
+//           where: whereClause,
+//         },
+//       ],
+//       offset,
+//       limit: parseInt(limit),
+//     });
+
+//     const leadsWithEstimations = leads.map((lead) => ({
+//       ...lead.toJSON(),
+//       estimation_count: lead.estimations.length,
+//       estimations: lead.estimations.map((estimation) => ({
+//         ...estimation.toJSON(),
+//         lead_id: lead.id,
+//       })),
+//     }));
+
+//     const totalEstimations = await estimation.count({ where: whereClause });
+
+//     res.status(200).json({
+//       leads: leadsWithEstimations,
+//       pagination: {
+//         total: count,
+//         page: parseInt(page),
+//         limit: parseInt(limit),
+//       },
+//       total_estimations: totalEstimations,
+//     });
+//   } catch (error) {
+//     console.error('Error retrieving leads with estimations for supervisor:', error);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
+
+//07-08-2024
 exports.getLeadEstimationsForSupervisor = async (req, res) => {
   try {
-    const { page = 1, limit = 10, date } = req.query;
+    const { page = 1, limit = 10, date, startDate, endDate } = req.query;
     const offset = (page - 1) * limit;
 
     const whereClause = {};
@@ -562,6 +693,11 @@ exports.getLeadEstimationsForSupervisor = async (req, res) => {
       whereClause.createdAt = {
         [Op.gte]: new Date(date),
         [Op.lt]: new Date(new Date(date).getTime() + 24 * 60 * 60 * 1000),
+      };
+    } else if (startDate && endDate) {
+      whereClause.createdAt = {
+        [Op.gte]: new Date(startDate),
+        [Op.lt]: new Date(new Date(endDate).getTime() + 24 * 60 * 60 * 1000),
       };
     }
 
@@ -610,7 +746,6 @@ exports.getLeadEstimationsForSupervisor = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
-
 
 
  
