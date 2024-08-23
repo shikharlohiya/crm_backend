@@ -18,6 +18,7 @@ const exotelRoutes = require('./Routes/exotel.js');
 const Region = require('./Routes/Region/RegionRoute.js');
 const Incoming = require('./Controller/CallingAPI/incoming.js');
 const EndCall = require('./Controller/CallingAPI/CallEndApi.js');
+const lead_converted = require('./Routes/Actions/lead_converted.js');
  
 
 const cors = require('cors');
@@ -48,6 +49,7 @@ app.use('/api', Audit);
 app.use('/api',Region);
 app.use('/api',Incoming);
 app.use('/api' ,EndCall );
+app.use('/api', lead_converted);
  
 
 

@@ -22,17 +22,17 @@ Lead_Detail.init(
     // Model attributes are defined here
     InquiryType: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
     //   allowNull: false,
     },
     Project: {
       type: DataTypes.STRING,
-      allowNull: false,
+      allowNull: true,
       // allowNull defaults to true
     },
     CustomerName: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     MobileNo: {
         type: DataTypes.STRING,
@@ -41,50 +41,56 @@ Lead_Detail.init(
     AlternateMobileNo :{
         type: DataTypes.STRING,
         // allowNull: false,
+        allowNull: true,
     },
     WhatsappNo: {
         type: DataTypes.STRING,
+        allowNull: true,
 
     },
     CustomerMailId: {
         type: DataTypes.STRING,
+        allowNull: true,
     },
     pincode :{
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     state_name: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     region_name: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     location: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     site_location_address : {
         type: DataTypes.STRING,
+        allowNull: true,
     },
     call_status : {
         type: DataTypes.STRING,
+        allowNull: true,
     },
     call_type : {
         type: DataTypes.STRING,
+        allowNull: true,
     },
     category: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     sub_category: {
         type: DataTypes.STRING,
-        allowNull: false,
+        allowNull: true,
     },
     agent_remark : {
         type: DataTypes.STRING(1000),
-        allowNull: false,
+        allowNull: true,
     },
     bdm_remark : {
         type: DataTypes.STRING(1000),

@@ -255,27 +255,6 @@ exports.createLead = async (req, res) => {
       BDMId,
 
 
-      // createdAt: new Date().toLocaleString('en-US', {
-      //   timeZone: 'Asia/Kolkata',
-      //   year: 'numeric',
-      //   month: '2-digit',
-      //   day: '2-digit',
-      //   hour: '2-digit',
-      //   minute: '2-digit',
-      //   second: '2-digit',
-      //   hour12: true
-      // }).replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2'),
-      // updatedAt: new Date().toLocaleString('en-US', {
-      //   timeZone: 'Asia/Kolkata',
-      //   year: 'numeric',
-      //   month: '2-digit',
-      //   day: '2-digit',
-      //   hour: '2-digit',
-      //   minute: '2-digit',
-      //   second: '2-digit',
-      //   hour12: false
-      // }).replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$1-$2')
-
       createdAt: new Date().toLocaleString('en-US', {
         timeZone: 'Asia/Kolkata',
         year: 'numeric',
@@ -494,6 +473,56 @@ exports.assignLeadToBDM = async (req, res) => {
     }
   };
 
+///////////////
+exports.getColdLeadsByAgentId = async (req, res) => {
+  try {
+    const { agentId } = req.params;
 
+    const employee = await Employee.findOne({
+      where: { EmployeeId: agentId },
+    });
+
+    if (!employee) {
+      return res.status(404).json({ message: 'Agent not found' });
+    }
+
+    const leads = await Lead_Detail.findAll({
+      where: {
+        AgentId: agentId,
+        category: {
+          [Op.or]: ['cold', 'pending', 'closed']
+        }
+      },
+      include: [
+        { model: Employee, as: 'Agent' },
+        { model: Employee, as: 'BDM' },
+        { model: Employee, as: 'Superviser' }
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.status(200).json({ leads });
+  } catch (error) {
+    console.error('Error retrieving cold leads:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
 
   

@@ -17,11 +17,12 @@ const Lead_Update = require('./lead_update.js');
 const Estimation = require('./estimation.js');
 const AuditLeadDetail = require('./AuditLeadTable.js');
 const AuditLeadRemark = require('./AuditLeadRemark.js');
+const LeadConverted = require('./Lead_converted.js');
 
 
 
 // Uncomment and adjust the sync options as needed
-
+// LeadConverted.sync({force: true});
 // User.sync({force: true});
 // Country.sync({force:true});
 // State.sync({force:true});

@@ -9,6 +9,8 @@ router.get('/lead/:mobileNo', AgentController.getLeadByMobileNo);
 router.put('/leads/:leadId/assign-bdm',auth, AgentController.assignLeadToBDM);
 router.get('/leads/agent/:agentId',auth, AgentController.getLeadsByAgentId);
 
+router.get('/leads/agent/:agentId/pending-cold',  AgentController.getColdLeadsByAgentId);
+
 
 module.exports = router;
 

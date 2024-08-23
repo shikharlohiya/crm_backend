@@ -62,7 +62,7 @@ estimation.init(
       type: DataTypes.STRING,
     },
     status: {
-      type: DataTypes.ENUM('Pending', 'Need for Approval', 'Generated', 'Estimation Shared'),
+      type: DataTypes.ENUM('Pending', 'Need for Approval', 'Generated', 'Estimation Shared', 'converted'),
       defaultValue: 'Pending',
       allowNull: false,
     },
