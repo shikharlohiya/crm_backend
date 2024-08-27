@@ -3,27 +3,119 @@ const Employee = require('../../models/employee');
 const Estimation = require('../../models/estimation');
 const Campaign = require('../../models/campaign');
 
+// exports.getLeadsByBDMId = async (req, res) => {
+//   try {
+//     const { bdmId } = req.params;
+
+//     const leads = await Lead_Detail.findAll({
+//       where: { BDMId: bdmId },
+//       include: [
+//         { model: Employee, as: 'Agent' },
+//         { model: Employee, as: 'BDM' },
+//         { model: Employee, as: 'Superviser' },
+   
+//           {
+//             model: Campaign,
+//             as: 'Campaign',
+//             attributes: ['CampaignId', 'CampaignName'],
+//           },
+      
+//       ],
+//     });
+
+//     res.status(200).json({ leads });
+//   } catch (error) {
+//     console.error('Error retrieving leads:', error);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
+
+
+// exports.getLeadsByBDMId = async (req, res) => {
+//   try {
+//     const { bdmId } = req.params;
+
+//     // Fetch all leads
+//     const leads = await Lead_Detail.findAll({
+//       where: { BDMId: bdmId },
+//       include: [
+//         { model: Employee, as: 'Agent' },
+//         { model: Employee, as: 'BDM' },
+//         { model: Employee, as: 'Superviser' },
+//         {
+//           model: Campaign,
+//           as: 'Campaign',
+//           attributes: ['CampaignId', 'CampaignName'],
+//         },
+//       ],
+//     });
+
+//     // Calculate counts
+//     const totalCount = leads.length;
+//     const hotCount = leads.filter(lead => lead.category === 'Hot').length;
+//     const pendingCount = leads.filter(lead => lead.category === 'Pending').length;
+//     const closedCount = leads.filter(lead => lead.category === 'Closed').length;
+//     const warmCount = leads.filter(lead => lead.category === 'Warm').length;
+//     const coldCount = leads.filter(lead => lead.category === 'Cold').length;
+
+//     // Prepare response object
+//     const response = {
+//       leads,
+//       counts: {
+//         total: totalCount,
+//         hot: hotCount,
+//         pending: pendingCount,
+//         closed: closedCount,
+//         warm: warmCount,
+//         cold: coldCount
+//       }
+//     };
+
+//     res.status(200).json(response);
+//   } catch (error) {
+//     console.error('Error retrieving leads:', error);
+//     res.status(500).json({ message: 'Internal server error' });
+//   }
+// };
+
+
 exports.getLeadsByBDMId = async (req, res) => {
   try {
     const { bdmId } = req.params;
 
+    // Fetch all leads
     const leads = await Lead_Detail.findAll({
       where: { BDMId: bdmId },
       include: [
         { model: Employee, as: 'Agent' },
         { model: Employee, as: 'BDM' },
         { model: Employee, as: 'Superviser' },
-   
-          {
-            model: Campaign,
-            as: 'Campaign',
-            attributes: ['CampaignId', 'CampaignName'],
-          },
-      
+        {
+          model: Campaign,
+          as: 'Campaign',
+          attributes: ['CampaignId', 'CampaignName'],
+        },
       ],
     });
 
-    res.status(200).json({ leads });
+    // Calculate counts for all categories
+    const totalCount = leads.length;
+    const categoryCounts = leads.reduce((acc, lead) => {
+      const category = lead.category || 'uncategorized';
+      acc[category] = (acc[category] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Prepare response object
+    const response = {
+      leads,
+      counts: {
+        total: totalCount,
+        ...categoryCounts
+      }
+    };
+
+    res.status(200).json(response);
   } catch (error) {
     console.error('Error retrieving leads:', error);
     res.status(500).json({ message: 'Internal server error' });
