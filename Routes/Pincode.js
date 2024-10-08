@@ -4,6 +4,9 @@ const models = require('../models/models.js');
 const sequelize = require('../models/index.js');
 const auth = require('../middleware/check-auth.js');
 const Region = require('../models/region.js');
+const Parivartan_BDM = require('../models/Parivartan_BDM.js')
+const Parivartan_Region = require('../models/Parivartan_Region.js')
+const Parivartan_State = require('../models/Parivartan_State.js');
 
 
 router.get('/places/:pincode',auth, async (req, res) => {
@@ -81,7 +84,73 @@ router.get('/regions', async (req, res) => {
   }
 });
 
+ 
+// API to get regions by state
+router.get('/regions/:stateName', async (req, res) => {
+  try {
+    const { stateName } = req.params;
+    const state = await Parivartan_State.findOne({
+      where: {
+        StateName: stateName,
+        Deleted: 'N'
+      },
+      include: [{
+        model: Parivartan_Region,
+        where: { Deleted: 'N' },
+        attributes: ['RegionId', 'RegionName']
+      }]
+    });
 
+    if (!state) {
+      return res.status(404).json({ message: 'State not found' });
+    }
+
+    if (state.parivartan_regions.length === 0) {
+      return res.status(404).json({ message: 'No regions found for this state' });
+    }
+
+    res.json(state.parivartan_regions);
+  } catch (error) {
+    console.error('Error in /regions/:stateName:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// API to get employee by region
+ 
+router.get('/employee/:regionName', async (req, res) => {
+  try {
+    const { regionName } = req.params;
+    const region = await Parivartan_Region.findOne({
+      where: {
+        RegionName: regionName,
+        Deleted: 'N'
+      },
+      include: [{
+        model: Parivartan_BDM,
+        where: { Deleted: 'N' },
+        attributes: ['EmployeeId', 'EmployeeName']
+      }]
+    });
+
+    if (!region) {
+      return res.status(404).json({ message: 'Region not found' });
+    }
+
+    if (region.parivartan_bdms.length === 0) {
+      return res.json({ message: 'No employee assigned to this region' });
+    }
+
+    const bdm = region.parivartan_bdms[0];
+    res.json({
+      EmployeeId: bdm.EmployeeId,
+      EmployeeName: bdm.EmployeeName
+    });
+  } catch (error) {
+    console.error('Error in /employee/:regionName:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
 
 
 module.exports = router;

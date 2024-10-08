@@ -1,7 +1,7 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('./index');
-const AuditLleadDetail = require('./AuditLeadTable')
-const Employee = require('./employee')
+const { Sequelize, DataTypes, Model } = require("sequelize");
+const sequelize = require("./index");
+const AuditLleadDetail = require("./AuditLeadTable");
+const Employee = require("./employee");
 
 class AuditLeadRemark extends Model {}
 
@@ -13,16 +13,16 @@ AuditLeadRemark.init(
       autoIncrement: true,
     },
     CH: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
     },
     AGE: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
     },
     BWT: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
     },
     M_QTY: {
-        type: DataTypes.STRING,
+      type: DataTypes.STRING,
     },
     REASON: {
       type: DataTypes.STRING,
@@ -70,22 +70,27 @@ AuditLeadRemark.init(
       type: DataTypes.DATEONLY,
     },
     AgentId: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-      },
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
   },
   {
     sequelize,
-    modelName: 'AuditLeadRemark',
-    tableName: 'audit_lead_remarks',
+    modelName: "AuditLeadRemark",
+    tableName: "audit_lead_remarks",
   }
 );
 
+Employee.hasMany(AuditLeadRemark, {
+  foreignKey: "AgentId",
+  as: "AgentAuditUpdate",
+});
+AuditLeadRemark.belongsTo(Employee, { foreignKey: "AgentId", as: "Agent" });
 
-Employee.hasMany(AuditLeadRemark, { foreignKey: 'AgentId', as: 'AgentAuditUpdate' });
-AuditLeadRemark.belongsTo(Employee, { foreignKey: 'AgentId', as: 'Agent' });
-
-AuditLleadDetail.hasMany(AuditLeadRemark, { foreignKey: 'Lot_Number', as: 'AuditRemarks' });
-AuditLeadRemark.belongsTo(AuditLleadDetail, { foreignKey: 'Lot_Number' });
+AuditLleadDetail.hasMany(AuditLeadRemark, {
+  foreignKey: "Lot_Number",
+  as: "AuditRemarks",
+});
+AuditLeadRemark.belongsTo(AuditLleadDetail, { foreignKey: "Lot_Number" });
 
 module.exports = AuditLeadRemark;

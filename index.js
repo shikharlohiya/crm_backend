@@ -19,6 +19,10 @@ const Region = require('./Routes/Region/RegionRoute.js');
 const Incoming = require('./Controller/CallingAPI/incoming.js');
 const EndCall = require('./Controller/CallingAPI/CallEndApi.js');
 const lead_converted = require('./Routes/Actions/lead_converted.js');
+const OnCallDiscussion = require('./Routes/Actions/on_call_discussion.js')
+const TimeLine = require('./Routes/TimeLine.js')
+const Attendance = require('./Routes/Attendence/Attendence.js');
+const BiRoutes = require('./Routes/BiRoutes/BiRoutes.js');
  
 
 const cors = require('cors');
@@ -35,6 +39,7 @@ app.use(function (req, res, next) {
   next();
 });
 
+
 app.use('/api/auth' ,authRoutes)
 app.use('/api', exotelRoutes);
 app.use('/api',AgentRoutes);
@@ -50,6 +55,11 @@ app.use('/api',Region);
 app.use('/api',Incoming);
 app.use('/api' ,EndCall );
 app.use('/api', lead_converted);
+app.use('/api',OnCallDiscussion);
+app.use('/api',TimeLine );
+app.use('/api',Attendance);
+app.use('/api' ,BiRoutes )
+
  
 
 

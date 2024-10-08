@@ -1,5 +1,5 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('./index');
+const { Sequelize, DataTypes, Model } = require("sequelize");
+const sequelize = require("./index");
 
 class Campaign extends Model {}
 
@@ -18,8 +18,8 @@ Campaign.init(
   },
   {
     sequelize,
-    modelName: 'Campaign',
-    tableName: 'campaign_table',
+    modelName: "Campaign",
+    tableName: "campaign_table",
     timestamps: false,
   }
 );

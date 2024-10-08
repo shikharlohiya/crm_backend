@@ -4,7 +4,8 @@ const auth = require('../../middleware/check-auth');
 const AgentController = require('../../Controller/Agent/AgentController');
 
 
-router.post('/create/leads',auth, AgentController.createLead);
+router.post('/create/leads', AgentController.createLead);
+router.post('/agent/follow-up',AgentController.createFollowUpByAgent);
 router.get('/lead/:mobileNo', AgentController.getLeadByMobileNo);
 router.put('/leads/:leadId/assign-bdm',auth, AgentController.assignLeadToBDM);
 router.get('/leads/agent/:agentId',auth, AgentController.getLeadsByAgentId);

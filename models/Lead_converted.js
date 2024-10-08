@@ -1,5 +1,5 @@
-const { Sequelize, DataTypes, Model } = require('sequelize');
-const sequelize = require('./index');
+const { Sequelize, DataTypes, Model } = require("sequelize");
+const sequelize = require("./index");
 
 class Lead_converted extends Model {}
 
@@ -15,18 +15,17 @@ Lead_converted.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'lead_detail',
-        key: 'id',
+        model: "lead_detail",
+        key: "id",
       },
     },
-    payment_amount:{
-        type : DataTypes.STRING,
-        allowNull: true,
-
+    payment_amount: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
-    payment_slip:{
-        type: DataTypes.JSON,
-        allowNull: true, 
+    payment_slip: {
+      type: DataTypes.JSON,
+      allowNull: true,
     },
     customer_creation_form: {
       type: DataTypes.JSON,
@@ -93,15 +92,32 @@ Lead_converted.init(
       allowNull: true,
     },
     remark: {
-        type: DataTypes.STRING,
-        allowNull: true,
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
 
-    }
+    payment_date: {
+      type: DataTypes.DATE,
+      allowNull: true,
+    },
+
+    extra_field2: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    extra_field3: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    extra_field4: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
   {
     sequelize,
-    modelName: 'LeadConverted',
-    tableName: 'Lead_converted',
+    modelName: "LeadConverted",
+    tableName: "Lead_converted",
     timestamps: true,
     underscored: true,
   }

@@ -21,9 +21,19 @@ const auth = require('../../middleware/check-auth');
 const multer = require('multer');
 
 
-const upload = multer({ dest: 'uploads/' });
+// const upload = multer({ dest: 'uploads/' });
+// const upload = multer({ storage: multer.memoryStorage() });
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
-router.post('/create/meeting', upload.array('images'),auth, lead_Meeting.createMeeting);
+const uploadMiddleware = upload.fields([
+  { name: 'images', maxCount: 10 },
+  // Add any other fields you need here
+]);
+
+
+
+router.post('/create/meeting', uploadMiddleware, lead_Meeting.createMeeting);
 router.post('/update/lead',auth, Lead_Update.createLeadUpdate);
 router.get('/leads/:leadId/meetings',auth, lead_Meeting.getMeetingsByLeadId);
 

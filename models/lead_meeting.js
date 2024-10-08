@@ -11,33 +11,44 @@ lead_Meeting.init(
 
     BirdsCapacity: {
       type: DataTypes.INTEGER,
+      allowNull: false,
+
     },
     LandDimension: {
       type: DataTypes.STRING,
+      allowNull: false,
     },
     ShedSize: {
       type: DataTypes.STRING,
+      allowNull: false,
     },
     IsLandDirectionEastWest: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     DirectionDeviationDegree: {
       type: DataTypes.INTEGER(2),
+      allowNull: false,
     },
     ElectricityPower: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     Water: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     ApproachRoad: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     ModelType: {
       type: DataTypes.STRING,
+      allowNull: false,
     },
     EstimationRequirement: {
       type: DataTypes.BOOLEAN,
+      allowNull: false,
     },
     Image: {
       type: DataTypes.JSON,
@@ -56,7 +67,23 @@ lead_Meeting.init(
     },
     ActionType:{
       type: DataTypes.STRING,
-    }
+    },
+    LeadDetailId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    BDMId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    remark: {
+      type: DataTypes.STRING,
+    },
+    extra_field3: {
+      type: DataTypes.STRING,
+    },
+    
+
   },
   {
     sequelize,

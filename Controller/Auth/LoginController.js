@@ -1,67 +1,6 @@
-// const jwt = require('jsonwebtoken');
-// // const bcrypt = require('bcrypt');
-// const { Employee } = require('../../models/models');
-
-// const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'; // Use an environment variable in production
-
-// exports.login = async (req, res) => {
-//   try {
-//     const { EmployeeId, EmployeePassword } = req.body;
-
-//     // Find the employee by EmployeeId
-//     const employee = await Employee.findOne({
-//       where: { EmployeeId },
-//     //   include: ['role'] // Include the associated role
-//     });
-
-//     if (!employee) {
-//       return res.status(401).json({ message: 'Invalid Employee ID or password' });
-//     }
-
-//     // Check if the password matches
-//     // Note: In this example, we're assuming the password is stored in plain text. 
-//     // In a real application, you should use bcrypt to hash and compare passwords.
-//     if (employee.EmployeePassword !== EmployeePassword) {
-//       return res.status(401).json({ message: 'Invalid Employee ID or password' });
-//     }
-
-//     // Generate JWT token
-//     const token = jwt.sign(
-//       { 
-//         EmployeeId: employee.EmployeeId,
-//         EmployeeName: employee.EmployeeName,
-//         EmployeeRoleID: employee.EmployeeRoleID
-//       },
-//       JWT_SECRET,
-//       { expiresIn: '1h' }
-//     );
-
-//     // Return employee data and token
-//     res.json({
-//       message: 'Login successful',
-//       status : '200',
-//       employee: {
-//         EmployeeId: employee.EmployeeId,
-//         EmployeeName: employee.EmployeeName,
-//         EmployeePhone: employee.EmployeePhone,
-//         EmployeeMailId: employee.EmployeeMailId,
-//         EmployeeRegion: employee.EmployeeRegion,
-//         EmployeeRole: employee.EmployeeRoleID 
-//       },
-//       token
-//     });
-
-//   } catch (error) {
-//     console.error('Login error:', error);
-//     res.status(500).json({ message: 'An error occurred during login' });
-//   }
-// };
-
-
-const jwt = require('jsonwebtoken');
-const { Employee, Campaign } = require('../../models/models');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const jwt = require("jsonwebtoken");
+const { Employee, Campaign } = require("../../models/models");
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 exports.login = async (req, res) => {
   try {
@@ -74,17 +13,21 @@ exports.login = async (req, res) => {
         {
           model: Campaign,
           through: { attributes: [] }, // Exclude the join table attributes
-          attributes: ['CampaignId', 'CampaignName'], // Include only the desired attributes
+          attributes: ["CampaignId", "CampaignName"], // Include only the desired attributes
         },
       ],
     });
 
     if (!employee) {
-      return res.status(401).json({ message: 'Invalid Employee ID or password' });
+      return res
+        .status(401)
+        .json({ message: "Invalid Employee ID or password" });
     }
 
     if (employee.EmployeePassword !== EmployeePassword) {
-      return res.status(401).json({ message: 'Invalid Employee ID or password' });
+      return res
+        .status(401)
+        .json({ message: "Invalid Employee ID or password" });
     }
 
     // Generate JWT token
@@ -95,13 +38,13 @@ exports.login = async (req, res) => {
         EmployeeRoleID: employee.EmployeeRoleID,
       },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: "24h" }
     );
 
     // Return employee data, campaign names, and token
     res.json({
-      message: 'Login successful',
-      status: '200',
+      message: "Login successful",
+      status: "200",
       employee: {
         EmployeeId: employee.EmployeeId,
         EmployeeName: employee.EmployeeName,
@@ -117,7 +60,7 @@ exports.login = async (req, res) => {
       token,
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'An error occurred during login' });
+    console.error("Login error:", error);
+    res.status(500).json({ message: "An error occurred during login" });
   }
 };
