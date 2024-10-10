@@ -6,7 +6,7 @@ const site_visit = require("../../models/site_visit");
 const lead_Meeting = require("../../models/lead_meeting");
 const estimation = require("../../models/estimation");
 const AuditLeadDetail = require("../../models/AuditLeadTable");
-const { Op } = require("sequelize");
+const { Op,literal } = require("sequelize");
 const sequelize = require("../../models/index");
 const XLSX = require("xlsx");
 const multer = require("multer");
@@ -158,15 +158,78 @@ exports.uploadAuditLeads = async (req, res) => {
 
 
 
+// exports.getAuditLeads = async (req, res) => {
+//   try {
+//     const { agentId } = req.query; // Assuming you'll pass the agent's ID as a query parameter
+
+//     if (!agentId) {
+//       return res.status(400).json({ message: "Agent ID is required" });
+//     }
+
+//     // First, fetch the agent's details to get their mapped regions
+//     const agent = await Employee.findByPk(agentId, {
+//       attributes: ["EmployeeName", "EmployeeRegion"],
+//     });
+
+//     if (!agent) {
+//       return res.status(404).json({ message: "Agent not found" });
+//     }
+
+//     // Assuming MappedRegions is stored as a comma-separated string
+//     const mappedRegions = agent.EmployeeRegion.split(",").map((region) =>
+//       region.trim()
+//     );
+
+//     // Fetch audit leads for the mapped regions
+//     const auditLeads = await AuditLeadDetail.findAll({
+//       where: {
+//         Zone_Name: {
+//           [Op.in]: mappedRegions,
+//         },
+//       },
+//       order: [["updatedAt", "DESC"]],
+//     });
+//     const totalCount = auditLeads.length;
+
+//     res.status(200).json({
+//       data: auditLeads,
+//       agent: {
+//         name: agent.EmployeeName,
+//         mappedRegions: mappedRegions,
+//       },
+//       totalCount: totalCount,
+//     });
+//   } catch (error) {
+//     console.error("Error retrieving audit leads:", error);
+//     res.status(500).json({ message: "Internal server error" });
+//   }
+// };
+
+
+ 
 exports.getAuditLeads = async (req, res) => {
   try {
-    const { agentId } = req.query; // Assuming you'll pass the agent's ID as a query parameter
+    const { 
+      agentId, 
+      page = 1, 
+      limit = 10, 
+      zoneName,
+      branchName,
+      farmerName, 
+      shedType, 
+      lotNumber,
+      line,
+      hatcheryName,
+      status,
+      sortFCR,
+      sortBirdAge,
+      commonSearch
+    } = req.query;
 
     if (!agentId) {
       return res.status(400).json({ message: "Agent ID is required" });
     }
 
-    // First, fetch the agent's details to get their mapped regions
     const agent = await Employee.findByPk(agentId, {
       attributes: ["EmployeeName", "EmployeeRegion"],
     });
@@ -175,21 +238,88 @@ exports.getAuditLeads = async (req, res) => {
       return res.status(404).json({ message: "Agent not found" });
     }
 
-    // Assuming MappedRegions is stored as a comma-separated string
     const mappedRegions = agent.EmployeeRegion.split(",").map((region) =>
       region.trim()
     );
 
-    // Fetch audit leads for the mapped regions
-    const auditLeads = await AuditLeadDetail.findAll({
+    const whereClause = {
+      Zone_Name: {
+        [Op.in]: mappedRegions,
+      },
+    };
+
+    // Add specific filters
+    if (zoneName) whereClause.Zone_Name = { [Op.like]: `%${zoneName}%` };
+    if (branchName) whereClause.Branch_Name = { [Op.like]: `%${branchName}%` };
+    if (farmerName) whereClause.Farmer_Name = { [Op.like]: `%${farmerName}%` };
+    if (shedType) whereClause.Shed_Type = { [Op.like]: `%${shedType}%` };
+    if (lotNumber) whereClause.Lot_Number = { [Op.like]: `%${lotNumber}%` };
+    if (line) whereClause.Line = { [Op.like]: `%${line}%` };
+    if (hatcheryName) whereClause.Hatchery_Name = { [Op.like]: `%${hatcheryName}%` };
+    if (status) whereClause.status = status;
+
+    // Add common search
+    if (commonSearch) {
+      whereClause[Op.or] = [
+        { Zone_Name: { [Op.like]: `%${commonSearch}%` } },
+        { Branch_Name: { [Op.like]: `%${commonSearch}%` } },
+        { Farmer_Name: { [Op.like]: `%${commonSearch}%` } },
+        { Shed_Type: { [Op.like]: `%${commonSearch}%` } },
+        { Lot_Number: { [Op.like]: `%${commonSearch}%` } },
+        { Line: { [Op.like]: `%${commonSearch}%` } },
+        { Hatchery_Name: { [Op.like]: `%${commonSearch}%` } },
+        { FCR: { [Op.like]: `%${commonSearch}%` } },
+        { Age_SAP: { [Op.like]: `%${commonSearch}%` } },
+      ];
+    }
+
+    const order = [];
+    if (sortFCR) {
+      order.push([literal('CAST(FCR AS DECIMAL)'), sortFCR.toUpperCase()]);
+    }
+    if (sortBirdAge) {
+      order.push([literal('CAST(Age_SAP AS DECIMAL)'), sortBirdAge.toUpperCase()]);
+    }
+    if (order.length === 0) {
+      order.push(['updatedAt', 'DESC']);
+    }
+
+    const offset = (page - 1) * limit;
+
+    const { count, rows: auditLeads } = await AuditLeadDetail.findAndCountAll({
+      where: whereClause,
+      order: order,
+      limit: parseInt(limit),
+      offset: offset,
+    });
+
+    // Get total status counts for all records
+    const totalStatusCounts = await AuditLeadDetail.count({
       where: {
         Zone_Name: {
           [Op.in]: mappedRegions,
         },
       },
-      order: [["updatedAt", "DESC"]],
+      group: ['status'],
+      attributes: ['status'],
     });
-    const totalCount = auditLeads.length;
+
+    const formattedTotalStatusCounts = totalStatusCounts.reduce((acc, curr) => {
+      acc[curr.status] = curr.count;
+      return acc;
+    }, {open: 0, working: 0, closed: 0});
+
+    // Get filtered status counts
+    const filteredStatusCounts = await AuditLeadDetail.count({
+      where: whereClause,
+      group: ['status'],
+      attributes: ['status'],
+    });
+
+    const formattedFilteredStatusCounts = filteredStatusCounts.reduce((acc, curr) => {
+      acc[curr.status] = curr.count;
+      return acc;
+    }, {open: 0, working: 0, closed: 0});
 
     res.status(200).json({
       data: auditLeads,
@@ -197,13 +327,25 @@ exports.getAuditLeads = async (req, res) => {
         name: agent.EmployeeName,
         mappedRegions: mappedRegions,
       },
-      totalCount: totalCount,
+      pagination: {
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(count / limit),
+        totalCount: count,
+        perPage: parseInt(limit),
+      },
+      totalStatusCounts: formattedTotalStatusCounts,
+      filteredStatusCounts: formattedFilteredStatusCounts,
     });
   } catch (error) {
     console.error("Error retrieving audit leads:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
+
+
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000; // 1 second
@@ -509,7 +651,7 @@ exports.getAllLeadsForSupervisor = async (req, res) => {
 };
 
 
-//for trader ----------------------------
+//for trader ------------------------
 function excelDateToJSDate(excelDate) {
   if (typeof excelDate === "string" && excelDate.includes("-")) {
     return excelDate; // Already in the correct format
@@ -676,6 +818,8 @@ exports.getAuditTraders = async (req, res) => {
       .json({ message: "Internal server error", error: error.toString() });
   }
 };
+
+
 
 exports.downloadAuditLeadsExcel = async (req, res) => {
   try {

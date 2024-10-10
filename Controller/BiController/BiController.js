@@ -5,6 +5,9 @@ const sequelize = require('../../models/index');
 const { Sequelize } = require('sequelize');
 const BiDayOpRemarks = require('../../models/BiDayOpRemarks');
 const Employee = require("../../models/employee");
+const BiBrooding = require('../../models/BiBrooding');
+const multer = require("multer");
+const path = require('path');
  
 
 function excelDateToJSDate(excelDate) {
@@ -133,8 +136,6 @@ exports.uploadAuditLeads = async (req, res) => {
     }
   }
 };
-
-
 
 
 const MAX_RETRIES = 3;
@@ -299,4 +300,165 @@ exports.getBiLeads = async (req, res) => {
       res.status(500).json({ message: "Internal server error" });
     }
   };
- 
+
+
+
+  exports.getAllLeadsForDayOpSuperviser = async (req, res) => {
+    try {
+      const {
+        page = 1,
+        limit = 10,
+        region,
+        status,
+        sortBy = "updatedAt",
+        sortOrder = "DESC",
+      } = req.query;
+  
+      const offset = (page - 1) * limit;
+  
+      let whereClause = {};
+      if (region) whereClause.Branch_Description = region;
+      if (status) whereClause.status = status;
+  
+      const { count, rows: auditLeads } = await BiDayOp.findAndCountAll({
+        where: whereClause,
+        order: [[sortBy, sortOrder]],
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+      });
+  
+      res.status(200).json({
+        data: auditLeads,
+        totalCount: count,
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(count / limit),
+      });
+    } catch (error) {
+      console.error("Error retrieving audit leads:", error);
+      res.status(500).json({ message: "Internal server error" });
+    }
+  };
+
+
+
+
+
+
+  /////////////
+
+  exports.uploadBiBrooding = async (req, res) => {
+    try {
+      const file = req.file;
+      const workbook = XLSX.readFile(file.path);
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet);
+  
+      const updatedRecords = [];
+      const invalidRecords = [];
+  
+      for (const row of data) {
+        const lotNo = row["LOT NO"];
+  
+        if (!lotNo) {
+          invalidRecords.push(row);
+          continue;
+        }
+  
+        const recordData = {
+          ZONE: row["ZONE"],
+          REGION: row["REGION"],
+          BRANCH: row["BRANCH"],
+          LOT_NO: lotNo,
+          FARMER_NAME: row["FARMER NAME"],
+          AGE: row["AGE"],
+          SHED_TYPE: row["SHED TYPE"],
+          CHICKS_PLANNED_HOUSED: row["CHICKS PLANNED/HOUSED"],
+          FARMER_CONTACT_NO: row["FARMER CONTACT NO"],
+          LOT_STATUS: row["LOT STATUS"],
+          status: "open",
+        };
+  
+        updatedRecords.push(recordData);
+      }
+  
+      await sequelize.transaction(async (transaction) => {
+        if (updatedRecords.length > 0) {
+          const lotNumbers = updatedRecords.map((record) => record.LOT_NO);
+  
+          // Update all existing records to 'open' status, including those not in the current batch
+          await BiBrooding.update(
+            { status: "open" },
+            {
+              where: {
+                [Op.or]: [
+                  { LOT_NO: lotNumbers },
+                  { status: { [Op.ne]: "open" } },
+                ],
+              },
+              transaction,
+            }
+          );
+  
+          // Perform upsert for each record
+          for (const record of updatedRecords) {
+            await BiBrooding.upsert(record, {
+              transaction,
+              logging: false,
+            });
+          }
+        }
+      });
+  
+      let message = "";
+      if (updatedRecords.length > 0) {
+        message = `${updatedRecords.length} Bi-Brooding record(s) uploaded/updated successfully. All records set to 'open' status. `;
+      }
+      if (invalidRecords.length > 0) {
+        message += `${invalidRecords.length} record(s) skipped due to missing or invalid LOT NO.`;
+      }
+  
+      if (updatedRecords.length === 0 && invalidRecords.length === 0) {
+        message = "No Bi-Brooding records uploaded or updated.";
+      }
+  
+      res.status(200).json({
+        message,
+        uploadedCount: updatedRecords.length,
+        skippedCount: invalidRecords.length,
+      });
+    } catch (error) {
+      console.error("Error uploading Bi-Brooding records:", error);
+  
+      if (error.name === "SequelizeDatabaseError") {
+        if (error.parent && error.parent.code === "ER_DATA_TOO_LONG") {
+          res.status(400).json({
+            message: "Data exceeds the maximum length allowed for a field",
+          });
+        } else if (
+          error.parent &&
+          error.parent.code === "ER_NO_DEFAULT_FOR_FIELD"
+        ) {
+          res.status(400).json({ message: "Missing required field value" });
+        } else {
+          res.status(500).json({ message: "Database error occurred" });
+        }
+      } else if (error.name === "SequelizeValidationError") {
+        const errors = error.errors.map((err) => ({
+          field: err.path,
+          message: err.message,
+        }));
+        res.status(400).json({ message: "Validation failed", errors });
+      } else if (error instanceof multer.MulterError) {
+        if (error.code === "LIMIT_FILE_SIZE") {
+          res.status(400).json({ message: "File size exceeds the limit" });
+        } else {
+          res.status(400).json({ message: "File upload error occurred" });
+        }
+      } else {
+        res.status(500).json({ message: "Internal server error" });
+      }
+    }
+  };
+
+
+  

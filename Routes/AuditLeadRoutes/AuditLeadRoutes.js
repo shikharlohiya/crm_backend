@@ -11,7 +11,7 @@ const multer = require('multer');
 const upload = multer({ dest: 'uploads/' });
 router.post('/upload-audit-leads', upload.single('file'), auth,  AuditController.uploadAuditLeads);
 router.post('/upload-trader-leads', upload.single('file'),  AuditController.uploadAuditTraders);
-router.get('/audit-leads',auth,  AuditController.getAuditLeads);
+router.get('/audit-leads',  AuditController.getAuditLeads);
 router.get('/audit-trader',auth, AuditController.getAuditTraders);
 router.post('/audit-remarks' ,  AuditController.createAuditLeadRemark)
 router.get('/get-audit-remarks/:lotNumber' , auth, AuditController.getAuditLeadRemarksByLotNumber)
