@@ -123,7 +123,7 @@ exports.getLeadUpdatesByBDMForSupervisor = async (req, res) => {
 
     const formattedLeads = leads.rows.map((lead) => ({
       ...lead.toJSON(),
-      callOnDiscussionCount: lead.Updates ? lead.Updates.length : 0,
+     
     }));
 
     const bdmLeadUpdateCounts = await OnCallDiscussionByBdm.findAll({
@@ -136,8 +136,11 @@ exports.getLeadUpdatesByBDMForSupervisor = async (req, res) => {
       include: [{ model: Employee, as: "BDM", attributes: ["EmployeeName"] }],
     });
 
+    const callOnCount = await OnCallDiscussionByBdm.count({ where: whereClause });
+
     res.status(200).json({
       leads: formattedLeads,
+      callOnDiscussionCount:callOnCount,
       pagination: {
         total: leads.count,
         page: parseInt(page),

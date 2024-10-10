@@ -103,7 +103,7 @@ exports.getCallOnDiscussionByLeadId = async (req, res) => {
       include: [
         {
           model: Employee,
-          as: "BDMName",
+          as: "BDM",
           attributes: ["EmployeeId", "EmployeeName"],
         },
       ],
