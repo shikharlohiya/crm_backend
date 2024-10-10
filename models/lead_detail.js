@@ -153,4 +153,12 @@ Lead_Detail.belongsTo(Campaign, {
   as: "Campaign",
 });
 
+
+
 module.exports = Lead_Detail;
+const OnCallDiscussionByBdm = require("./OnCallDiscussionByBdm");
+
+Lead_Detail.hasMany(OnCallDiscussionByBdm, {
+  foreignKey: 'LeadDetailId',
+  as: 'Updatess'
+});

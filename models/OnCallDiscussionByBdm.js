@@ -50,12 +50,21 @@ OnCallDiscussionByBdm.init(
   }
 );
 
-Lead_Detail.hasMany(OnCallDiscussionByBdm, { foreignKey: 'LeadDetailId' });
-OnCallDiscussionByBdm.belongsTo(Lead_Detail, { foreignKey: 'LeadDetailId' });
+ 
 
 
-Employee.hasMany(OnCallDiscussionByBdm, { foreignKey: 'BDMId',as: 'BDMName'  });
-OnCallDiscussionByBdm.belongsTo(Employee, { foreignKey: 'BDMId',as: 'BDMName'});
+OnCallDiscussionByBdm.belongsTo(Lead_Detail, { 
+  foreignKey: 'LeadDetailId',
+  as: 'LeadDetail'
+});
+
+
+// Lead_Detail.hasMany(OnCallDiscussionByBdm, { foreignKey: 'LeadDetailId' });
+// OnCallDiscussionByBdm.belongsTo(Lead_Detail, { foreignKey: 'LeadDetailId' });
+
+
+Employee.hasMany(OnCallDiscussionByBdm, { foreignKey: 'BDMId',as: 'BDM'  });
+OnCallDiscussionByBdm.belongsTo(Employee, { foreignKey: 'BDMId',as: 'BDM'});
 
 
 

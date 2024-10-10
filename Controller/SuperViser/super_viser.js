@@ -15,6 +15,7 @@ const OnCallDiscussionByBdm = require("../../models/OnCallDiscussionByBdm");
 const { Sequelize, QueryTypes } = require("sequelize");
 const BdmLeadAction = require('../../models/BdmLeadAction');
 
+
 exports.getLeadsWithSiteVisitsForSupervisor = async (req, res) => {
   try {
     const { page = 1, limit = 10, date, startDate, endDate } = req.query;
@@ -110,7 +111,7 @@ exports.getLeadUpdatesByBDMForSupervisor = async (req, res) => {
         { model: Employee, as: "Superviser" },
         {
           model: OnCallDiscussionByBdm,
-          as: "Updates",
+          as: "Updatess",
           where: whereClause,
           required: true,
           include: [{ model: Employee, as: "BDM" }],
