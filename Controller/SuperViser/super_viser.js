@@ -621,6 +621,60 @@ exports.uploadLeads = async (req, res) => {
 //   }
 // };
 
+
+//corrent comment
+// exports.getLeads = async (req, res) => {
+//   try {
+//     // Pagination parameters
+//     const page = parseInt(req.query.page) || 1;
+//     const limit = parseInt(req.query.limit) || 10;
+//     const offset = (page - 1) * limit;
+
+//     // Filtering parameters
+//     const filter = {};
+//     if (req.query.InquiryType) filter.InquiryType = req.query.InquiryType;
+//     if (req.query.Project) filter.Project = req.query.Project;
+//     if (req.query.CustomerName)
+//       filter.CustomerName = { [Op.like]: `%${req.query.CustomerName}%` };
+//     if (req.query.MobileNo) filter.MobileNo = req.query.MobileNo;
+
+//     // Sorting parameter
+//     const order = req.query.sort
+//       ? [[req.query.sort, "ASC"]]
+//       : [["createdAt", "DESC"]];
+
+//     const { count, rows } = await Lead_Detail.findAndCountAll({
+//       where: filter,
+//       limit,
+//       offset,
+//       order,
+//       include: [
+//         { model: Employee, as: "BDM" },
+//         { model: Employee, as: "Agent" },
+
+//         {
+//           model: Campaign,
+//           as: "Campaign",
+//           attributes: ["CampaignId", "CampaignName"],
+//         },
+//       ],
+//     });
+
+//     const totalPages = Math.ceil(count / limit);
+
+//     res.json({
+//       leads: rows,
+//       currentPage: page,
+//       totalPages,
+//       totalLeads: count,
+//     });
+//   } catch (error) {
+//     console.error("Error fetching leads:", error);
+//     res.status(500).json({ message: "An error occurred while fetching leads" });
+//   }
+// };
+
+
 exports.getLeads = async (req, res) => {
   try {
     // Pagination parameters
@@ -629,12 +683,94 @@ exports.getLeads = async (req, res) => {
     const offset = (page - 1) * limit;
 
     // Filtering parameters
-    const filter = {};
-    if (req.query.InquiryType) filter.InquiryType = req.query.InquiryType;
-    if (req.query.Project) filter.Project = req.query.Project;
-    if (req.query.CustomerName)
-      filter.CustomerName = { [Op.like]: `%${req.query.CustomerName}%` };
-    if (req.query.MobileNo) filter.MobileNo = req.query.MobileNo;
+    let filter = {};
+    const includeConditions = [];
+
+    // Helper function to add a filter condition
+    const addFilter = (field, value, operatorType = Op.like) => {
+      if (value) {
+        const words = value.split(' ');
+        if (words.length > 1) {
+          return {
+            [field]: {
+              [Op.and]: words.map(word => ({ [operatorType]: `%${word}%` }))
+            }
+          };
+        } else {
+          return { [field]: { [operatorType]: `%${value}%` } };
+        }
+      }
+      return null;
+    };
+
+    // Common search
+    if (req.query.search) {
+      const searchConditions = [
+        addFilter('InquiryType', req.query.search),
+        addFilter('Project', req.query.search),
+        addFilter('CustomerName', req.query.search),
+        addFilter('MobileNo', req.query.search),
+        addFilter('region_name', req.query.search),
+        addFilter('category', req.query.search),
+        addFilter('close_month', req.query.search),
+        { '$Campaign.CampaignName$': { [Op.like]: `%${req.query.search}%` } },
+        { '$BDM.EmployeeName$': { [Op.like]: `%${req.query.search}%` } },
+        { '$Agent.EmployeeName$': { [Op.like]: `%${req.query.search}%` } },
+      ].filter(condition => condition !== null);
+
+      filter = { [Op.or]: searchConditions };
+    } else {
+      // Apply individual filters if no common search
+      filter = {
+        ...addFilter('InquiryType', req.query.InquiryType),
+        ...addFilter('Project', req.query.Project),
+        ...addFilter('CustomerName', req.query.CustomerName),
+        ...addFilter('MobileNo', req.query.MobileNo, Op.eq),
+        ...addFilter('region_name', req.query.region),
+        ...addFilter('category', req.query.category),
+        ...addFilter('close_month', req.query.closuremonth),
+      };
+
+      // Campaign name filter
+      if (req.query.campaignName) {
+        includeConditions.push({
+          model: Campaign,
+          as: "Campaign",
+          where: {
+            CampaignName: { [Op.like]: `%${req.query.campaignName}%` }
+          }
+        });
+      }
+
+      // BDM name filter
+      if (req.query.bdmName) {
+        includeConditions.push({
+          model: Employee,
+          as: "BDM",
+          where: {
+            EmployeeName: { [Op.like]: `%${req.query.bdmName}%` }
+          }
+        });
+      }
+
+      // Agent name filter
+      if (req.query.agentName) {
+        includeConditions.push({
+          model: Employee,
+          as: "Agent",
+          where: {
+            EmployeeName: { [Op.like]: `%${req.query.agentName}%` }
+          }
+        });
+      }
+    }
+
+    // Always include these models
+    includeConditions.push(
+      { model: Campaign, as: "Campaign" },
+      { model: Employee, as: "BDM" },
+      { model: Employee, as: "Agent" }
+    );
 
     // Sorting parameter
     const order = req.query.sort
@@ -646,16 +782,8 @@ exports.getLeads = async (req, res) => {
       limit,
       offset,
       order,
-      include: [
-        { model: Employee, as: "BDM" },
-        { model: Employee, as: "Agent" },
-
-        {
-          model: Campaign,
-          as: "Campaign",
-          attributes: ["CampaignId", "CampaignName"],
-        },
-      ],
+      include: includeConditions,
+      distinct: true,
     });
 
     const totalPages = Math.ceil(count / limit);
@@ -672,8 +800,116 @@ exports.getLeads = async (req, res) => {
   }
 };
 
-//region wise // bdm wise
 
+
+//excel export
+
+exports.exportLeadsToExcel = async (req, res) => {
+  try {
+    // Fetch all leads without filtering
+    const leads = await Lead_Detail.findAll({
+      include: [
+        { model: Employee, as: "BDM" },
+        { model: Employee, as: "Agent" },
+        { model: Employee, as: "Superviser" },
+        {
+          model: Campaign,
+          as: "Campaign",
+          attributes: ["CampaignId", "CampaignName"],
+        },
+      ],
+    });
+
+    if (leads.length === 0) {
+      return res.status(404).json({ message: 'No leads found in the database' });
+    }
+
+    // Prepare data for Excel
+    const excelData = leads.map(lead => {
+      // Determine the lead creator name
+      let leadCreator = '';
+      if (lead.lead_created_by === 1 && lead.Agent) {
+        leadCreator = lead.Agent.EmployeeName;
+      } else if (lead.lead_created_by === 2 && lead.BDM) {
+        leadCreator = lead.BDM.EmployeeName;
+      }
+
+      return {
+        
+        Project: lead.Project,
+        CustomerName: lead.CustomerName,
+        MobileNo: lead.MobileNo,
+        Region: lead.region_name,
+        Location: lead.location,
+        Category: lead.category,
+       'Sub Category': lead.sub_category,
+       'CSE Remark': lead.agent_remark,
+       'BDM Remark': lead.bdm_remark,
+       'Next Follow Up Date': lead.follow_up_date,
+       'Closure Month': lead.close_month,
+       'Source Of Lead': lead.Campaign ? lead.Campaign.CampaignName : '',
+       'CSE Name': lead.Agent ? lead.Agent.EmployeeName : '',
+       'BDM Name': lead.BDM ? lead.BDM.EmployeeName : '',
+       'Coordinator Name': lead.Superviser ? lead.Superviser.EmployeeName : '',
+       'Last Action': lead.last_action,
+        InquiryType: lead.InquiryType,
+        AlternateMobileNo: lead.AlternateMobileNo,
+        WhatsappNo: lead.WhatsappNo,
+        CustomerMailId: lead.CustomerMailId,
+        State: lead.state_name,
+        Pincode: lead.pincode,
+        'Site Location Address': lead.site_location_address,
+        'Lead Transfer Date': lead.lead_transfer_date,
+        'Call Status': lead.call_status,
+        'Call Type': lead.call_type,
+        'Lead Created By': leadCreator,
+        // 'Lead Created By': lead.lead_created_by === 1 ? 'Agent' : (lead.lead_created_by === 2 ? 'BDM' : ''),
+      };
+    });
+
+    // Create a new workbook and add a worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+    // Add the worksheet to the workbook
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Leads');
+
+    // Generate buffer
+    const excelBuffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+    // Set response headers
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=All_Leads_Export.xlsx');
+
+    // Send the Excel file
+    res.send(excelBuffer);
+
+  } catch (error) {
+    console.error('Error exporting leads:', error);
+    
+    if (res.headersSent) {
+      console.error('Headers already sent, unable to send error response');
+      return;
+    }
+
+    if (error.name === 'SequelizeConnectionError') {
+      return res.status(503).json({ message: 'Database connection error. Please try again later.' });
+    } else {
+      return res.status(500).json({ message: 'An unexpected error occurred while exporting leads.' });
+    }
+  }
+};
+
+
+
+
+
+
+
+
+
+
+//region wise // bdm wise
 exports.getLeadAnalytics = async (req, res) => {
   try {
     const { filter } = req.query;
