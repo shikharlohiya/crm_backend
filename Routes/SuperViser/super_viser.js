@@ -18,6 +18,7 @@ router.get('/bdm/estimation', SupervisorController.getLeadEstimationsForSupervis
 router.post('/upload-leads', upload.single('file'), SupervisorController.uploadLeads);
 router.get('/get/leads',  SupervisorController.getLeads);
 router.get('/superviser/export',  SupervisorController.exportLeadsToExcel);
+router.get('/filter/list/:field',SupervisorController.getDistinctValues);
 router.get('/bdm-followup-tasks', SupervisorController.getBDMFollowUpTasks);
 router.get('/bdm-self-tasks', SupervisorController.getBDMSelfTasks);
 router.get('/bdm-daily-tasks/:bdmId', SupervisorController.getBdmDailyTasks);

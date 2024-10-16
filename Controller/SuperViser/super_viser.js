@@ -14,7 +14,7 @@ const XLSX = require("xlsx");
 const OnCallDiscussionByBdm = require("../../models/OnCallDiscussionByBdm");
 const { Sequelize, QueryTypes } = require("sequelize");
 const BdmLeadAction = require('../../models/BdmLeadAction');
-
+const EmployeeRole = require('../../models/employeRole');
 
 exports.getLeadsWithSiteVisitsForSupervisor = async (req, res) => {
   try {
@@ -725,7 +725,7 @@ exports.getLeads = async (req, res) => {
         ...addFilter('InquiryType', req.query.InquiryType),
         ...addFilter('Project', req.query.Project),
         ...addFilter('CustomerName', req.query.CustomerName),
-        ...addFilter('MobileNo', req.query.MobileNo, Op.eq),
+        ...addFilter('MobileNo', req.query.MobileNo),
         ...addFilter('region_name', req.query.region),
         ...addFilter('category', req.query.category),
         ...addFilter('close_month', req.query.closuremonth),
@@ -902,6 +902,71 @@ exports.exportLeadsToExcel = async (req, res) => {
 
 
 
+
+
+//filter list-
+
+exports.getDistinctValues = async (req, res) => {
+  try {
+    const field = req.params.field;
+    let values;
+    console.log(field, '-------------');
+    
+
+    switch (field) {
+      case 'InquiryType':
+      case 'Project':
+      case 'region_name':
+      case 'category':
+        values = await Lead_Detail.findAll({
+          attributes: [[Sequelize.fn('DISTINCT', Sequelize.col(field)), field]],
+          where: {
+            [field]: {
+              [Op.ne]: null,
+              [Op.ne]: ''
+            }
+          },
+          order: [[field, 'ASC']]
+        });
+        break;
+
+      case 'campaignName':
+        values = await Campaign.findAll({
+          attributes: ['CampaignId', 'CampaignName'],
+          order: [['CampaignName', 'ASC']]
+        });
+        break;
+
+      case 'bdmName':
+      case 'agentName':
+        const role = field === 'bdmName' ? 'BDM' : 'Agent';
+        values = await Employee.findAll({
+          attributes: ['EmployeeId', 'EmployeeName'],
+          where: {
+            '$role.RoleName$': role
+          },
+          include: [{
+            model: Employee_Role,
+            as: 'role',
+            attributes: []
+          }],
+          order: [['EmployeeName', 'ASC']]
+        });
+        break;
+
+      default:
+        return res.status(400).json({ message: 'Invalid field specified' });
+    }
+
+    res.json(values);
+  } catch (error) {
+    console.error(`Error fetching ${field} values:`, error);
+    res.status(500).json({ message: `An error occurred while fetching ${field} values` });
+  }
+};
+
+
+ 
 
 
 

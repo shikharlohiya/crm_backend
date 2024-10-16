@@ -29,6 +29,7 @@ const Parivartan_Employee = require("./Parivartan_BDM.js");
 const  BiDayOp = require("./BiDayOp.js");
 const BiDayOpRemarks = require("./BiDayOpRemarks.js");
 const BiBrooding = require("./BiBrooding.js");
+const call_logs = require("./CallLog.js");
 const sequelize = require('./index.js');
 
 // const dropLeadUpdateTable = async () => {
@@ -49,7 +50,7 @@ const sequelize = require('./index.js');
 
 // BiDayOpRemarks.sync({alter: true});
 // Country.sync({force:true});
-// State.sync({force:true});
+// call_logs.sync({force:true});
 // City.sync({alter:true});
 // Place.sync({force:true});
 // Zone.sync({force:true});
