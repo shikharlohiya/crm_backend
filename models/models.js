@@ -30,7 +30,10 @@ const  BiDayOp = require("./BiDayOp.js");
 const BiDayOpRemarks = require("./BiDayOpRemarks.js");
 const BiBrooding = require("./BiBrooding.js");
 const call_logs = require("./CallLog.js");
+const incoming_calls  = require('./IncomingCall.js')
+const PostCallData = require('./PostCallData.js');
 const sequelize = require('./index.js');
+
 
 // const dropLeadUpdateTable = async () => {
 //   try {
@@ -46,7 +49,7 @@ const sequelize = require('./index.js');
 
 // Uncomment and adjust the sync options as needed
 
-// BiBrooding.sync({force: true});
+// PostCallData.sync({force: true});
 
 // BiDayOpRemarks.sync({alter: true});
 // Country.sync({force:true});

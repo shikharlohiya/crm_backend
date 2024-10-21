@@ -1,14 +1,19 @@
 const { Sequelize } = require("sequelize");
 
-const sequelize = new Sequelize("crm_parivartan", "root", "loglin", {
-  host: "localhost",
-  dialect: "mysql",
-});
 
-// const sequelize = new Sequelize( 'crm_parivartan_prd' , 'crmuser' , 'loglin', {
-//     host : '172.16.2.22',
-//     dialect : 'mysql'
-//    });
+
+// const sequelize = new Sequelize("crm_parivartan", "root", "loglin", {
+//   host: "localhost",
+//   dialect: "mysql",
+// });
+
+
+
+
+const sequelize = new Sequelize( 'crm_parivartan_prd' , 'crmuser' , 'loglin', {
+    host : '172.16.2.22',
+    dialect : 'mysql'
+   });
 
 try {
   sequelize.authenticate();
