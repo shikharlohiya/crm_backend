@@ -11,99 +11,199 @@ const { Op } = require('sequelize');
 const PostCallData = require('../../models/PostCallData');
 
 
+// router.post('/webhook/pingback', async (req, res) => {
+//   const data = req.body;
+//   console.log(data, '------------------');
+
+//   try {
+//     // Extracting all relevant details from the webhook
+//     const {
+//       SERVICE_TYPE,
+//       EVENT_TYPE,
+//       CALL_ID,
+//       DNI,
+//       A_PARTY_NO,
+//       CALL_START_TIME,
+//       A_PARTY_DIAL_START_TIME,
+//       A_PARTY_DIAL_END_TIME,
+//       A_PARTY_CONNECTED_TIME,
+//       A_DIAL_STATUS,
+//       A_PARTY_END_TIME,
+//       A_PARTY_RELEASE_REASON,
+//       B_PARTY_NO,
+//       B_PARTY_DIAL_START_TIME,
+//       B_PARTY_DIAL_END_TIME,
+//       B_PARTY_CONNECTED_TIME,
+//       B_PARTY_END_TIME,
+//       B_PARTY_RELEASE_REASON,
+//       B_DIAL_STATUS,
+//       C_PARTY_NO,
+//       C_PARTY_DIAL_START_TIME,
+//       C_PARTY_DIAL_END_TIME,
+//       C_PARTY_CONNECTED_TIME,
+//       C_PARTY_END_TIME,
+//       C_PARTY_RELEASE_REASON,
+//       C_DIAL_STATUS,
+//       REF_ID,
+//       RecordVoice,
+//       DISCONNECTED_BY,
+//     } = data;
+
+
+//     // Function to parse date-time strings
+//     // const parseDateTime = (dateTimeString) => {
+//     //   return dateTimeString ? moment(dateTimeString, 'DDMMYYYYHHmmss').toDate() : null;
+//     // };
+//     const parseDateTime = (dateTimeString) => {
+//       return dateTimeString 
+//         ? moment.tz(dateTimeString, 'DDMMYYYYHHmmss', 'Asia/Kolkata').toDate() 
+//         : null;
+//     };
+
+
+//     // Save the call log to the database
+//     const callLog = await CallLog.create({
+//       serviceType: SERVICE_TYPE,
+//       eventType: EVENT_TYPE,
+//       callId: CALL_ID,
+//       dni: DNI,
+//       aPartyNo: A_PARTY_NO,
+//       callStartTime: parseDateTime(CALL_START_TIME),
+//       aPartyDialStartTime: parseDateTime(A_PARTY_DIAL_START_TIME),
+//       aPartyDialEndTime: parseDateTime(A_PARTY_DIAL_END_TIME),
+//       aPartyConnectedTime: parseDateTime(A_PARTY_CONNECTED_TIME),
+//       aDialStatus: A_DIAL_STATUS,
+//       aPartyEndTime: parseDateTime(A_PARTY_END_TIME),
+//       aPartyReleaseReason: A_PARTY_RELEASE_REASON,
+//       bPartyNo: B_PARTY_NO,
+//       bPartyDialStartTime: parseDateTime(B_PARTY_DIAL_START_TIME),
+//       bPartyDialEndTime: parseDateTime(B_PARTY_DIAL_END_TIME),
+//       bPartyConnectedTime: parseDateTime(B_PARTY_CONNECTED_TIME),
+//       bPartyEndTime: parseDateTime(B_PARTY_END_TIME),
+//       bPartyReleaseReason: B_PARTY_RELEASE_REASON,
+//       bDialStatus: B_DIAL_STATUS,
+//       cPartyNo: C_PARTY_NO,
+//       cPartyDialStartTime: parseDateTime(C_PARTY_DIAL_START_TIME),
+//       cPartyDialEndTime: parseDateTime(C_PARTY_DIAL_END_TIME),
+//       cPartyConnectedTime: parseDateTime(C_PARTY_CONNECTED_TIME),
+//       cPartyEndTime: parseDateTime(C_PARTY_END_TIME),
+//       cPartyReleaseReason: C_PARTY_RELEASE_REASON,
+//       cDialStatus: C_DIAL_STATUS,
+//       refId: REF_ID,
+//       recordVoice: RecordVoice,
+//       disconnectedBy: DISCONNECTED_BY,
+//     });
+
+//     console.log('Call log saved:', callLog.id);
+
+//     // Send a response back to acknowledge receipt of the webhook
+//     res.status(200).json({ message: 'PingBack API Run Successfully', callLogId: callLog.id });
+//   } catch (error) {
+//     console.error('Error processing webhook:', error);
+//     res.status(500).json({ message: 'Error processing webhook', error: error.message });
+//   }
+// });
+
+
 router.post('/webhook/pingback', async (req, res) => {
   const data = req.body;
-  console.log(data, '------------------');
+  console.log('Webhook data received:', data);
 
   try {
-    // Extracting all relevant details from the webhook
-    const {
-      SERVICE_TYPE,
-      EVENT_TYPE,
-      CALL_ID,
-      DNI,
-      A_PARTY_NO,
-      CALL_START_TIME,
-      A_PARTY_DIAL_START_TIME,
-      A_PARTY_DIAL_END_TIME,
-      A_PARTY_CONNECTED_TIME,
-      A_DIAL_STATUS,
-      A_PARTY_END_TIME,
-      A_PARTY_RELEASE_REASON,
-      B_PARTY_NO,
-      B_PARTY_DIAL_START_TIME,
-      B_PARTY_DIAL_END_TIME,
-      B_PARTY_CONNECTED_TIME,
-      B_PARTY_END_TIME,
-      B_PARTY_RELEASE_REASON,
-      B_DIAL_STATUS,
-      C_PARTY_NO,
-      C_PARTY_DIAL_START_TIME,
-      C_PARTY_DIAL_END_TIME,
-      C_PARTY_CONNECTED_TIME,
-      C_PARTY_END_TIME,
-      C_PARTY_RELEASE_REASON,
-      C_DIAL_STATUS,
-      REF_ID,
-      RecordVoice,
-      DISCONNECTED_BY,
-    } = data;
-
-
-    // Function to parse date-time strings
-    // const parseDateTime = (dateTimeString) => {
-    //   return dateTimeString ? moment(dateTimeString, 'DDMMYYYYHHmmss').toDate() : null;
-    // };
+    // Parse datetime helper function
     const parseDateTime = (dateTimeString) => {
       return dateTimeString 
         ? moment.tz(dateTimeString, 'DDMMYYYYHHmmss', 'Asia/Kolkata').toDate() 
         : null;
     };
 
-
-    // Save the call log to the database
+    // Create call log
     const callLog = await CallLog.create({
-      serviceType: SERVICE_TYPE,
-      eventType: EVENT_TYPE,
-      callId: CALL_ID,
-      dni: DNI,
-      aPartyNo: A_PARTY_NO,
-      callStartTime: parseDateTime(CALL_START_TIME),
-      aPartyDialStartTime: parseDateTime(A_PARTY_DIAL_START_TIME),
-      aPartyDialEndTime: parseDateTime(A_PARTY_DIAL_END_TIME),
-      aPartyConnectedTime: parseDateTime(A_PARTY_CONNECTED_TIME),
-      aDialStatus: A_DIAL_STATUS,
-      aPartyEndTime: parseDateTime(A_PARTY_END_TIME),
-      aPartyReleaseReason: A_PARTY_RELEASE_REASON,
-      bPartyNo: B_PARTY_NO,
-      bPartyDialStartTime: parseDateTime(B_PARTY_DIAL_START_TIME),
-      bPartyDialEndTime: parseDateTime(B_PARTY_DIAL_END_TIME),
-      bPartyConnectedTime: parseDateTime(B_PARTY_CONNECTED_TIME),
-      bPartyEndTime: parseDateTime(B_PARTY_END_TIME),
-      bPartyReleaseReason: B_PARTY_RELEASE_REASON,
-      bDialStatus: B_DIAL_STATUS,
-      cPartyNo: C_PARTY_NO,
-      cPartyDialStartTime: parseDateTime(C_PARTY_DIAL_START_TIME),
-      cPartyDialEndTime: parseDateTime(C_PARTY_DIAL_END_TIME),
-      cPartyConnectedTime: parseDateTime(C_PARTY_CONNECTED_TIME),
-      cPartyEndTime: parseDateTime(C_PARTY_END_TIME),
-      cPartyReleaseReason: C_PARTY_RELEASE_REASON,
-      cDialStatus: C_DIAL_STATUS,
-      refId: REF_ID,
-      recordVoice: RecordVoice,
-      disconnectedBy: DISCONNECTED_BY,
+      serviceType: data.SERVICE_TYPE,
+      eventType: data.EVENT_TYPE,
+      callId: data.CALL_ID,
+      dni: data.DNI,
+      aPartyNo: data.A_PARTY_NO,
+      callStartTime: parseDateTime(data.CALL_START_TIME),
+      aPartyDialStartTime: parseDateTime(data.A_PARTY_DIAL_START_TIME),
+      aPartyDialEndTime: parseDateTime(data.A_PARTY_DIAL_END_TIME),
+      aPartyConnectedTime: parseDateTime(data.A_PARTY_CONNECTED_TIME),
+      aDialStatus: data.A_DIAL_STATUS,
+      aPartyEndTime: parseDateTime(data.A_PARTY_END_TIME),
+      aPartyReleaseReason: data.A_PARTY_RELEASE_REASON,
+      bPartyNo: data.B_PARTY_NO,
+      bPartyDialStartTime: parseDateTime(data.B_PARTY_DIAL_START_TIME),
+      bPartyDialEndTime: parseDateTime(data.B_PARTY_DIAL_END_TIME),
+      bPartyConnectedTime: parseDateTime(data.B_PARTY_CONNECTED_TIME),
+      bPartyEndTime: parseDateTime(data.B_PARTY_END_TIME),
+      bPartyReleaseReason: data.B_PARTY_RELEASE_REASON,
+      bDialStatus: data.B_DIAL_STATUS,
+      cPartyNo: data.C_PARTY_NO,
+      cPartyDialStartTime: parseDateTime(data.C_PARTY_DIAL_START_TIME),
+      cPartyDialEndTime: parseDateTime(data.C_PARTY_DIAL_END_TIME),
+      cPartyConnectedTime: parseDateTime(data.C_PARTY_CONNECTED_TIME),
+      cPartyEndTime: parseDateTime(data.C_PARTY_END_TIME),
+      cPartyReleaseReason: data.C_PARTY_RELEASE_REASON,
+      cDialStatus: data.C_DIAL_STATUS,
+      refId: data.REF_ID,
+      recordVoice: data.RecordVoice,
+      disconnectedBy: data.DISCONNECTED_BY,
     });
 
-    console.log('Call log saved:', callLog.id);
+    // Get socket ID for this call
+    const socketId = req.activeCallSockets.get(data.CALL_ID);
+    if (socketId) {
+      // Prepare event data based on event type
+      let eventData = {
+        eventType: data.EVENT_TYPE,
+        callId: data.CALL_ID,
+        timestamp: new Date().toISOString()
+      };
 
-    // Send a response back to acknowledge receipt of the webhook
-    res.status(200).json({ message: 'PingBack API Run Successfully', callLogId: callLog.id });
+      // Add specific data based on event type
+      switch (data.EVENT_TYPE) {
+        case 'B party Connected/Notconnected':
+          eventData = {
+            ...eventData,
+            status: data.B_DIAL_STATUS,
+            bPartyNo: data.B_PARTY_NO,
+            bPartyConnectedTime: data.B_PARTY_CONNECTED_TIME,
+            bPartyDialStartTime: data.B_PARTY_DIAL_START_TIME
+          };
+          break;
+
+        case 'Call End':
+          eventData = {
+            ...eventData,
+            disconnectedBy: data.DISCONNECTED_BY,
+            endTime: data.B_PARTY_END_TIME || data.A_PARTY_END_TIME,
+            releaseReason: data.B_PARTY_RELEASE_REASON || data.A_PARTY_RELEASE_REASON
+          };
+          break;
+
+        case 'Call Initiated':
+          eventData = {
+            ...eventData,
+            aPartyNo: data.A_PARTY_NO,
+            bPartyNo: data.B_PARTY_NO,
+            startTime: data.CALL_START_TIME
+          };
+          break;
+      }
+
+      // Emit event to the specific client
+      req.io.to(socketId).emit('callStatusUpdate', eventData);
+    }
+
+    res.status(200).json({ 
+      message: 'Webhook processed successfully', 
+      callLogId: callLog.id 
+    });
   } catch (error) {
     console.error('Error processing webhook:', error);
-    res.status(500).json({ message: 'Error processing webhook', error: error.message });
+    res.status(500).json({ error: error.message });
   }
 });
-
 
 
 
@@ -518,59 +618,105 @@ router.post('/call-disconnection', async (req, res) => {
 });
 
 ///
+// router.get('/call-statistics/:aPartyNo', async (req, res) => {
+//   try {
+//     const { aPartyNo } = req.params;
+
+//     // Fetch all call logs for the given A-party number
+//     const callLogs = await CallLog.findAll({
+//       where: { aPartyNo },
+//       order: [['callStartTime', 'DESC']]
+//     });
+
+//     let connectedCalls = 0;
+//     let notConnectedCalls = 0;
+//     let totalDuration = 0;
+
+//     const callDetails = callLogs.map(call => {
+//       const startTime = new Date(call.callStartTime);
+//       const endTime = new Date(call.aPartyEndTime);
+//       const duration = (endTime - startTime) / 1000; // duration in seconds
+
+//       if (call.aDialStatus === 'Connected') {
+//         connectedCalls++;
+//         totalDuration += duration;
+//       } else {
+//         notConnectedCalls++;
+//       }
+
+//       return {
+//         callId: call.callId,
+//         startTime: call.callStartTime,
+//         duration: duration,
+//         status: call.aDialStatus
+//       };
+//     });
+
+//     const totalCalls = connectedCalls + notConnectedCalls;
+//     const averageDuration = connectedCalls > 0 ? totalDuration / connectedCalls : 0;
+
+//     const response = {
+//      "AgentNo": aPartyNo,
+//       totalCalls,
+//       connectedCalls,
+//       notConnectedCalls,
+//       totalDuration,
+//       averageDuration,
+//       callDetails
+//     };
+
+//     res.status(200).json(response);
+//   } catch (error) {
+//     console.error('Error fetching call statistics:', error);
+//     res.status(500).json({ message: 'Error fetching call statistics', error: error.message });
+//   }
+// });
+
+
+
 router.get('/call-statistics/:aPartyNo', async (req, res) => {
   try {
     const { aPartyNo } = req.params;
 
-    // Fetch all call logs for the given A-party number
-    const callLogs = await CallLog.findAll({
-      where: { aPartyNo },
-      order: [['callStartTime', 'DESC']]
-    });
-
-    let connectedCalls = 0;
-    let notConnectedCalls = 0;
-    let totalDuration = 0;
-
-    const callDetails = callLogs.map(call => {
-      const startTime = new Date(call.callStartTime);
-      const endTime = new Date(call.aPartyEndTime);
-      const duration = (endTime - startTime) / 1000; // duration in seconds
-
-      if (call.aDialStatus === 'Connected') {
-        connectedCalls++;
-        totalDuration += duration;
-      } else {
-        notConnectedCalls++;
+    // Get connected calls count
+    const connectedCallsCount = await CallLog.count({
+      where: {
+        aPartyNo,
+        eventType: 'Call End',
+        bDialStatus: 'connected'
       }
-
-      return {
-        callId: call.callId,
-        startTime: call.callStartTime,
-        duration: duration,
-        status: call.aDialStatus
-      };
     });
 
-    const totalCalls = connectedCalls + notConnectedCalls;
-    const averageDuration = connectedCalls > 0 ? totalDuration / connectedCalls : 0;
+    // Get not connected calls count
+    const notConnectedCallsCount = await CallLog.count({
+      where: {
+        aPartyNo,
+        eventType: 'Call End',
+        bDialStatus: {
+           [Op.ne]: 'connected'
+        }
+      }
+    });
 
-    const response = {
-     "AgentNo": aPartyNo,
-      totalCalls,
-      connectedCalls,
-      notConnectedCalls,
-      totalDuration,
-      averageDuration,
-      callDetails
-    };
+    res.status(200).json({
+      success: true,
+      data: {
+        aPartyNo,
+        connectedCalls: connectedCallsCount,
+        notConnectedCalls: notConnectedCallsCount,
+        totalCalls: connectedCallsCount + notConnectedCallsCount
+      }
+    });
 
-    res.status(200).json(response);
   } catch (error) {
-    console.error('Error fetching call statistics:', error);
-    res.status(500).json({ message: 'Error fetching call statistics', error: error.message });
+    console.error('Error retrieving call counts:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Internal server error'
+    });
   }
 });
+
 
 
 //
@@ -655,34 +801,6 @@ router.post('/merge-call', async (req, res) => {
     }
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
  

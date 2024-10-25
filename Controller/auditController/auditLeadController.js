@@ -491,6 +491,87 @@ exports.getAuditLeadRemarksByLotNumber = async (req, res) => {
   }
 };
 
+//get Audit detail by lot number ----------
+
+exports.getAuditLeadDetailsByLotNumber = async (req, res) => {
+  try {
+    const { lotNumber } = req.params;
+
+    // Get the main audit lead details
+    const auditLeadDetails = await AuditLeadDetail.findOne({
+      where: {
+        Lot_Number: lotNumber,
+      }
+    });
+
+    if (!auditLeadDetails) {
+      return res.status(404).json({
+        success: false,
+        message: "No audit lead details found for the specified Lot Number"
+      });
+    }
+
+    // Get associated remarks
+    const auditLeadRemarks = await AuditLeadRemark.findAll({
+      order: [["updatedAt", "DESC"]],
+      where: {
+        Lot_Number: lotNumber,
+      },
+      include: [
+        {
+          model: Employee,
+          as: "Agent",
+          attributes: ["EmployeeName"],
+        },
+      ],
+    });
+
+    // Calculate additional metrics if needed
+    // const detailsWithMetrics = {
+    //   ...auditLeadDetails.toJSON(),
+    //   // Calculate mortality rate if both values are present
+    //   mortalityRate: auditLeadDetails.Total_Mortality && auditLeadDetails.Placed_Qty 
+    //     ? ((parseFloat(auditLeadDetails.Total_Mortality) / parseFloat(auditLeadDetails.Placed_Qty)) * 100).toFixed(2)
+    //     : null,
+    //   // Calculate age in days if Hatch_Date is present
+    //   ageInDays: auditLeadDetails.Hatch_Date 
+    //     ? Math.floor((new Date() - new Date(auditLeadDetails.Hatch_Date)) / (1000 * 60 * 60 * 24))
+    //     : null,
+    // };
+
+    // Combine all information
+    const response = {
+      success: true,
+      data: {
+        details: auditLeadDetails,
+        remarks: auditLeadRemarks,
+        summary: {
+          totalRemarks: auditLeadRemarks.length,
+          status: auditLeadDetails.status,
+          lastUpdated: auditLeadDetails.updatedAt,
+          farmerId: auditLeadDetails.Farmer_Name,
+          location: {
+            zone: auditLeadDetails.Zone_Name,
+            branch: auditLeadDetails.Branch_Name
+          }
+        }
+      }
+    };
+
+    res.status(200).json(response);
+
+  } catch (error) {
+    console.error("Error retrieving audit lead details:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error",
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+
+
 exports.getSupervisorDashboard = async (req, res) => {
   try {
     // Fetch all agents
