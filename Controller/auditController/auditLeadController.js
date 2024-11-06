@@ -1029,3 +1029,175 @@ exports.downloadAuditLeadsExcel = async (req, res) => {
     res.status(500).json({ message: "Error generating Excel file" });
   }
 };
+
+
+//Add lead for the new farmers
+
+
+exports.createAuditLead = async (req, res) => {
+  try {
+      const auditData = req.body;
+
+      // Validate required fields
+      if (!auditData.Farmer_Name) {
+          return res.status(400).json({
+              success: false,
+              message: "Farmer Name is required"
+          });
+      }
+
+      // If Lot_Number is not provided, generate using current date and time
+      if (!auditData.Lot_Number) {
+          const now = new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
+          const day = String(now.getDate()).padStart(2, '0');
+          const hours = String(now.getHours()).padStart(2, '0');
+          const minutes = String(now.getMinutes()).padStart(2, '0');
+          const seconds = String(now.getSeconds()).padStart(2, '0');
+          const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+          
+          auditData.Lot_Number = `LOT-${year}${month}${day}-${hours}${minutes}${seconds}${milliseconds}`;
+      }
+
+      // Validate status if provided
+      if (auditData.status && !['open', 'working', 'closed'].includes(auditData.status)) {
+          return res.status(400).json({
+              success: false,
+              message: "Invalid status value. Must be 'open', 'working', or 'closed'"
+          });
+      }
+
+      // Set last_action_date to current timestamp
+      auditData.last_action_date = new Date();
+
+      // Data validation for numeric fields
+      const numericFields = [
+          'Placed_Qty',
+          'First_Week_Mortality_Percentage',
+          'Total_Mortality_Percentage',
+          'Lift_Percentage',
+          'Avg_Lift_Wt',
+          'ABWT',
+          'FCR'
+      ];
+
+      numericFields.forEach(field => {
+          if (auditData[field] && isNaN(parseFloat(auditData[field]))) {
+              throw new Error(`${field} must be a valid number`);
+          }
+      });
+
+      // Validate mobile number length
+      if (auditData.Mobile && auditData.Mobile.length > 20) {
+          return res.status(400).json({
+              success: false,
+              message: "Mobile number exceeds maximum length of 20 characters"
+          });
+      }
+
+      // Create the record
+      const newAuditLead = await AuditLeadDetail.create(auditData);
+
+      return res.status(201).json({
+          success: true,
+          message: "Audit lead created successfully",
+          data: newAuditLead
+      });
+
+  } catch (error) {
+      // Check for Sequelize unique constraint error
+      if (error.name === 'SequelizeUniqueConstraintError') {
+          return res.status(409).json({
+              success: false,
+              message: "Lot Number already exists"
+          });
+      }
+
+      // Check for Sequelize validation errors
+      if (error.name === 'SequelizeValidationError') {
+          return res.status(400).json({
+              success: false,
+              message: "Validation error",
+              errors: error.errors.map(err => ({
+                  field: err.path,
+                  message: err.message
+              }))
+          });
+      }
+
+      // Log the error for debugging
+      console.error('Error creating audit lead:', error);
+
+      return res.status(500).json({
+          success: false,
+          message: "An error occurred while creating the audit lead",
+          error: error.message
+      });
+  }
+};
+
+
+exports.getLotNumbersByMobile = async (req, res) => {
+  try {
+      const { mobile } = req.params;
+
+      // Validate mobile parameter
+      if (!mobile) {
+          return res.status(400).json({
+              success: false,
+              message: "Mobile number is required"
+          });
+      }
+
+      // Validate mobile number format and length
+      if (mobile.length > 20) {
+          return res.status(400).json({
+              success: false,
+              message: "Invalid mobile number length"
+          });
+      }
+
+      // Find all records with the given mobile number
+      const auditRecords = await AuditLeadDetail.findAll({
+          where: {
+              Mobile: mobile
+          },
+          attributes: [
+              'Lot_Number', 
+              'Farmer_Name',
+              'Zone_Name',
+              'Branch_Name',
+              'status',
+              'last_action_date'
+          ],
+          order: [
+              ['last_action_date', 'DESC']  // Most recent first
+          ]
+      });
+
+      if (!auditRecords || auditRecords.length === 0) {
+          return res.status(404).json({
+              success: false,
+              message: "No records found for this mobile number"
+          });
+      }
+
+      return res.status(200).json({
+          success: true,
+          message: "Records retrieved successfully",
+          count: auditRecords.length,
+          data: auditRecords
+      });
+
+  } catch (error) {
+      console.error('Error fetching lot numbers:', error);
+      return res.status(500).json({
+          success: false,
+          message: "An error occurred while fetching the records",
+          error: error.message
+      });
+  }
+};
+
+
