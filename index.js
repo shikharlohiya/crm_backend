@@ -167,6 +167,8 @@ const OnCallDiscussion = require('./Routes/Actions/on_call_discussion.js');
 const TimeLine = require('./Routes/TimeLine.js');
 const Attendance = require('./Routes/Attendence/Attendence.js');
 const BiRoutes = require('./Routes/BiRoutes/BiRoutes.js');
+const customerLeadRoutes = require('./Routes/Customer/Customer.js');
+
 
 // Middleware
 app.use(bodyParser.json());
@@ -209,6 +211,7 @@ app.use('/api', TimeLine);
 app.use('/api', Attendance);
 app.use('/api', BiRoutes);
 app.use('/api', PincodeRoutes);
+app.use('/api', customerLeadRoutes);
 
 // Root route
 app.get('/', function (req, res) {
