@@ -4,444 +4,6 @@ const express = require('express');
 // controllers/customerLeadController.js
 const CustomerLeadForm = require('../../models/CustomerLeadForm');
 
-// exports.createCustomerLead = async (req, res) => {
-//     try {
-//         const {
-//             CustomerName,
-//             ContactNumber,
-//             pincode,
-//             StateName,
-//             location,
-//             CustomerMailId,
-//             EC_Shed_Plan,
-//             LandAvailable,
-//             Land_Size,
-//             Unit,
-//             Electricity,
-//             WaterAvailabilty,
-//             ApproachableRoad,
-//             Investment_Budget,
-//             NUmberOfShed,
-//             Source,
-//             Remark
-//         } = req.body;
-
-//         // Required fields check
-//         const requiredFields = {
-//             CustomerName,
-//             ContactNumber,
-//             StateName,
-//             location,
-//             EC_Shed_Plan,
-//             LandAvailable,
-//             Electricity,
-//             WaterAvailabilty,
-//             ApproachableRoad,
-//             Investment_Budget,
-//             Source
-//         };
-
-//         for (const [field, value] of Object.entries(requiredFields)) {
-//             if (!value && value !== false) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     error: `${field} is required`
-//                 });
-//             }
-//         }
-
-//         // Contact number validation
-//         if (!/^\d{10}$/.test(ContactNumber)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "Contact number must be 10 digits"
-//             });
-//         }
-
-//         // Email validation if provided
-//         if (CustomerMailId && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(CustomerMailId)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "Invalid email format"
-//             });
-//         }
-
-//         // Enum validations
-//         const validEC_Shed_Plans = ["Planning New EC Shed", "Open to EC Shed"];
-//         if (!validEC_Shed_Plans.includes(EC_Shed_Plan)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "Invalid EC_Shed_Plan value"
-//             });
-//         }
-
-//         if (Unit && !["Acres", "Beegha", "Sq.ft"].includes(Unit)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "Invalid Unit value"
-//             });
-//         }
-
-//         const validElectricityTypes = ["Single Phase", "Three Phase"];
-//         if (!validElectricityTypes.includes(Electricity)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "Invalid Electricity value"
-//             });
-//         }
-
-//         const validInvestmentBudgets = [
-//             "Upto 50 lacs",
-//             "Between 50 lacs to 1 Cr",
-//             "Between 1Cr to 1.50 Cr",
-//             "Between 1.50Cr to 2Cr",
-//             "Above 2 Cr"
-//         ];
-//         if (!validInvestmentBudgets.includes(Investment_Budget)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "Invalid Investment_Budget value"
-//             });
-//         }
-
-//         // Boolean validations
-//         const booleanFields = {
-//             LandAvailable,
-//             WaterAvailabilty,
-//             ApproachableRoad
-//         };
-
-//         for (const [field, value] of Object.entries(booleanFields)) {
-//             if (typeof value !== 'boolean') {
-//                 return res.status(400).json({
-//                     success: false,
-//                     error: `${field} must be a boolean value`
-//                 });
-//             }
-//         }
-
-//         // Number of shed validation
-//         if (NUmberOfShed && (!Number.isInteger(Number(NUmberOfShed)) || Number(NUmberOfShed) < 1)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "NUmberOfShed must be a positive integer"
-//             });
-//         }
-
-//         // Create customer lead
-//         const customerLead = await CustomerLeadForm.create({
-//             CustomerName,
-//             ContactNumber,
-//             pincode,
-//             StateName,
-//             location,
-//             CustomerMailId,
-//             EC_Shed_Plan,
-//             LandAvailable,
-//             Land_Size,
-//             Unit,
-//             Electricity,
-//             WaterAvailabilty,
-//             ApproachableRoad,
-//             Investment_Budget,
-//             NUmberOfShed: NUmberOfShed ? Number(NUmberOfShed) : null,
-//             Source,
-//             Remark
-//         });
-
-//         return res.status(201).json({
-//             success: true,
-//             message: "Customer lead created successfully",
-//             data: customerLead
-//         });
-
-//     } catch (error) {
-//         console.error('Error in createCustomerLead:', error);
-        
-//         if (error.name === 'SequelizeValidationError') {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: error.errors.map(e => e.message)
-//             });
-//         }
-
-//         if (error.name === 'SequelizeUniqueConstraintError') {
-//             return res.status(409).json({
-//                 success: false,
-//                 error: 'Record already exists'
-//             });
-//         }
-
-//         return res.status(500).json({
-//             success: false,
-//             error: "Internal server error"
-//         });
-//     }
-// };
-
-
-
-// controllers/customerLeadController.js
-
-// exports.createCustomerLead = async (req, res) => {
-//     try {
-//         const {
-//             CustomerName,
-//             ContactNumber,
-//             pincode,
-//             StateName,
-//             location,
-//             CustomerMailId,
-//             EC_Shed_Plan,
-//             // Planning New EC Shed fields
-//             LandAvailable,
-//             Land_Size,
-//             Unit,
-//             Electricity,
-//             WaterAvailabilty,
-//             ApproachableRoad,
-//             // Investment fields
-//             Investment_Budget,
-//             NUmberOfShed,
-//             Source,
-//             Remark,
-//             // Open to EC Shed fields
-//             IntegrationCompany,
-//             ShedSize,
-//             CurrentShedDirection,
-//             ElectricityPhase,
-//             CurrentBirdCapacity
-//         } = req.body;
-
-//         // Basic required fields check
-//         const basicRequiredFields = {
-//             CustomerName,
-//             ContactNumber,
-//             StateName,
-//             location,
-//             EC_Shed_Plan,
-//             Investment_Budget,
-//             Source
-//         };
-
-//         for (const [field, value] of Object.entries(basicRequiredFields)) {
-//             if (!value && value !== false) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     error: `${field} is required`
-//                 });
-//             }
-//         }
-
-//         // Contact number validation
-//         if (!/^\d{10}$/.test(ContactNumber)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "Contact number must be 10 digits"
-//             });
-//         }
-
-//         // Email validation if provided
-//         if (CustomerMailId && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(CustomerMailId)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "Invalid email format"
-//             });
-//         }
-
-//         // EC Shed Plan validation
-//         const validEC_Shed_Plans = ["Planning New EC Shed", "Open to EC Shed"];
-//         if (!validEC_Shed_Plans.includes(EC_Shed_Plan)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "Invalid EC_Shed_Plan value"
-//             });
-//         }
-
-//         // Conditional validation based on EC_Shed_Plan
-//         if (EC_Shed_Plan === "Planning New EC Shed") {
-//             // Check required fields for Planning New EC Shed
-//             const planningNewShedFields = {
-//                 LandAvailable,
-//                 Land_Size,
-//                 Unit,
-//                 Electricity,
-//                 WaterAvailabilty,
-//                 ApproachableRoad
-//             };
-
-//             for (const [field, value] of Object.entries(planningNewShedFields)) {
-//                 if (!value && value !== false) {
-//                     return res.status(400).json({
-//                         success: false,
-//                         error: `${field} is required for Planning New EC Shed`
-//                     });
-//                 }
-//             }
-
-//             // Unit validation
-//             if (!["Acres", "Beegha", "Sq.ft"].includes(Unit)) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     error: "Invalid Unit value"
-//                 });
-//             }
-
-//             // Electricity validation
-//             if (!["Single Phase", "Three Phase"].includes(Electricity)) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     error: "Invalid Electricity value"
-//                 });
-//             }
-
-//             // Boolean validations
-//             const booleanFields = {
-//                 LandAvailable,
-//                 WaterAvailabilty,
-//                 ApproachableRoad
-//             };
-
-//             for (const [field, value] of Object.entries(booleanFields)) {
-//                 if (typeof value !== 'boolean') {
-//                     return res.status(400).json({
-//                         success: false,
-//                         error: `${field} must be a boolean value`
-//                     });
-//                 }
-//             }
-
-//         } else if (EC_Shed_Plan === "Open to EC Shed") {
-//             // Check required fields for Open to EC Shed
-//             const openToShedFields = {
-//                 IntegrationCompany,
-//                 ShedSize,
-//                 CurrentShedDirection,
-//                 ElectricityPhase,
-//                 CurrentBirdCapacity
-//             };
-
-//             for (const [field, value] of Object.entries(openToShedFields)) {
-//                 if (!value && value !== 0) {
-//                     return res.status(400).json({
-//                         success: false,
-//                         error: `${field} is required for Open to EC Shed`
-//                     });
-//                 }
-//             }
-
-//             // Integration Company validation
-//             if (!["IB Group", "Others"].includes(IntegrationCompany)) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     error: "Invalid Integration Company value"
-//                 });
-//             }
-
-//             // Current Shed Direction validation
-//             if (!["East West", "North South"].includes(CurrentShedDirection)) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     error: "Invalid Current Shed Direction value"
-//                 });
-//             }
-
-//             // Electricity Phase validation
-//             if (!["Single Phase", "Three Phase"].includes(ElectricityPhase)) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     error: "Invalid Electricity Phase value"
-//                 });
-//             }
-
-//             // Current Bird Capacity validation
-//             if (!Number.isInteger(Number(CurrentBirdCapacity)) || Number(CurrentBirdCapacity) < 0) {
-//                 return res.status(400).json({
-//                     success: false,
-//                     error: "Current Bird Capacity must be a non-negative integer"
-//                 });
-//             }
-//         }
-
-//         // Investment Budget validation
-//         const validInvestmentBudgets = [
-//             "Upto 50 lacs",
-//             "Between 50 lacs to 1 Cr",
-//             "Between 1Cr to 1.50 Cr",
-//             "Between 1.50Cr to 2Cr",
-//             "Above 2 Cr"
-//         ];
-//         if (!validInvestmentBudgets.includes(Investment_Budget)) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "Invalid Investment_Budget value"
-//             });
-//         }
-
-//         // Number of shed validation
-//         if (!Number.isInteger(Number(NUmberOfShed)) || Number(NUmberOfShed) < 1) {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: "Number of Shed must be a positive integer"
-//             });
-//         }
-
-//         // Create customer lead with conditional fields
-//         const customerLead = await CustomerLeadForm.create({
-//             CustomerName,
-//             ContactNumber,
-//             pincode,
-//             StateName,
-//             location,
-//             CustomerMailId,
-//             EC_Shed_Plan,
-//             LandAvailable: EC_Shed_Plan === "Planning New EC Shed" ? LandAvailable : null,
-//             Land_Size: EC_Shed_Plan === "Planning New EC Shed" ? Land_Size : null,
-//             Unit: EC_Shed_Plan === "Planning New EC Shed" ? Unit : null,
-//             Electricity: EC_Shed_Plan === "Planning New EC Shed" ? Electricity : null,
-//             WaterAvailabilty: EC_Shed_Plan === "Planning New EC Shed" ? WaterAvailabilty : null,
-//             ApproachableRoad: EC_Shed_Plan === "Planning New EC Shed" ? ApproachableRoad : null,
-//             IntegrationCompany: EC_Shed_Plan === "Open to EC Shed" ? IntegrationCompany : null,
-//             ShedSize: EC_Shed_Plan === "Open to EC Shed" ? ShedSize : null,
-//             CurrentShedDirection: EC_Shed_Plan === "Open to EC Shed" ? CurrentShedDirection : null,
-//             ElectricityPhase: EC_Shed_Plan === "Open to EC Shed" ? ElectricityPhase : null,
-//             CurrentBirdCapacity: EC_Shed_Plan === "Open to EC Shed" ? CurrentBirdCapacity : null,
-//             Investment_Budget,
-//             NUmberOfShed: Number(NUmberOfShed),
-//             Source,
-//             Remark
-//         });
-
-//         return res.status(201).json({
-//             success: true,
-//             message: "Customer lead created successfully",
-//             data: customerLead
-//         });
-
-//     } catch (error) {
-//         console.error('Error in createCustomerLead:', error);
-        
-//         if (error.name === 'SequelizeValidationError') {
-//             return res.status(400).json({
-//                 success: false,
-//                 error: error.errors.map(e => e.message)
-//             });
-//         }
-
-//         if (error.name === 'SequelizeUniqueConstraintError') {
-//             return res.status(409).json({
-//                 success: false,
-//                 error: 'Record already exists'
-//             });
-//         }
-
-//         return res.status(500).json({
-//             success: false,
-//             error: "Internal server error"
-//         });
-//     }
-// };
-
 
 
 exports.createCustomerLead = async (req, res) => {
@@ -449,9 +11,11 @@ exports.createCustomerLead = async (req, res) => {
         const {
             CustomerName,
             ContactNumber,
+            WhatsAppNumber, // New field
             pincode,
             StateName,
             location,
+            otherLocation, // New field
             CustomerMailId,
             EC_Shed_Plan,
             // Planning New EC Shed fields
@@ -463,9 +27,11 @@ exports.createCustomerLead = async (req, res) => {
             ApproachableRoad,
             // Investment fields
             Investment_Budget,
+            Project, // New field
             NUmberOfShed,
             Source,
             Remark,
+
             // Open to EC Shed fields
             IntegrationCompany,
             ShedSize,
@@ -550,7 +116,7 @@ exports.createCustomerLead = async (req, res) => {
                 }
 
                 // Unit validation
-                if (!["Acres", "Beegha", "Sq.ft"].includes(Unit)) {
+                if (!["Acres", "Beegha", "Sq.ft."].includes(Unit)) {
                     return res.status(400).json({
                         success: false,
                         error: "Invalid Unit value"
@@ -656,6 +222,7 @@ exports.createCustomerLead = async (req, res) => {
             pincode,
             StateName,
             location,
+            otherLocation, // New field
             CustomerMailId,
             EC_Shed_Plan,
             LandAvailable: EC_Shed_Plan === "Planning New EC Shed" ? LandAvailable : null,
@@ -672,9 +239,11 @@ exports.createCustomerLead = async (req, res) => {
             ElectricityPhase: EC_Shed_Plan === "Open to EC Shed" ? ElectricityPhase : null,
             CurrentBirdCapacity: EC_Shed_Plan === "Open to EC Shed" ? CurrentBirdCapacity : null,
             Investment_Budget,
+            Project, // New field
             NUmberOfShed: Number(NUmberOfShed),
             Source,
-            Remark
+            Remark,
+            WhatsAppNumber // New field
         });
 
         return res.status(201).json({

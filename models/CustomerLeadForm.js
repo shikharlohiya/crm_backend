@@ -55,7 +55,7 @@ CustomerLeadForm.init(
     },
 
     Unit: {
-      type: DataTypes.ENUM("Acres", "Beegha", "Sq.ft"),
+      type: DataTypes.ENUM("Acres", "Beegha", "Sq.ft."),
       allowNull: true,
     },
 
@@ -118,16 +118,16 @@ CustomerLeadForm.init(
       allowNull: true,
     },
 
-    extra_field1:{
+    otherLocation:{
         type: DataTypes.STRING(80),
         allowNull: true,
     },
-    extra_field2:{
+    Project:{
         type: DataTypes.STRING(80),
         allowNull: true,
     },
-    extra_field3:{
-        type: DataTypes.STRING(80),
+    WhatsAppNumber:{
+        type: DataTypes.STRING(20),
         allowNull: true,
     },
     extra_field4:{
