@@ -7,6 +7,10 @@ const Region = require('../models/region.js');
 const Parivartan_BDM = require('../models/Parivartan_BDM.js')
 const Parivartan_Region = require('../models/Parivartan_Region.js')
 const Parivartan_State = require('../models/Parivartan_State.js');
+const { Op } = require('sequelize');
+const State = require('../models/state.js');
+const City = require('../models/city.js');
+
 
 
 router.get('/places/:pincode',auth, async (req, res) => {
@@ -152,5 +156,88 @@ router.get('/employee/:regionName', async (req, res) => {
   }
 });
 
+router.get('/states/search', async (req, res) => {
+  try {
+      const { query } = req.query;
+
+      // if (!query) {
+      //     return res.status(400).json({
+      //         success: false,
+      //         message: 'Search query is required'
+      //     });
+      // }
+
+      const states = await State.findAll({
+          attributes: ['StateCode', 'StateName'],
+          where: {
+              CountryCode: 'IN',
+              // StateName: {
+              //     [Op.like]: `%${query}%`
+              // }
+          },
+          order: [
+              ['StateName', 'ASC']
+          ]
+      });
+
+      return res.status(200).json({
+          success: true,
+          data: states,
+          message: 'States searched successfully'
+      });
+  } catch (error) {
+      console.error('Error searching states:', error);
+      return res.status(500).json({
+          success: false,
+          message: 'Error searching states',
+          error: error.message
+      });
+  }
+});
+
+
+router.get('/cities/search/:stateCode', async (req, res) => {
+  try {
+      const { stateCode } = req.params;
+      const { query } = req.query;
+
+      if (!stateCode) {
+          return res.status(400).json({
+              success: false,
+              message: 'Both state code and search query are required'
+          });
+      }
+
+      const cities = await City.findAll({
+          attributes: ['CityId', 'CityName'],
+          where: {
+              StateCode: stateCode,
+              // Deleted: 'N',
+              // CityName: {
+              //     [Op.like]: `%${query}%`
+              // }
+          },
+          order: [
+              ['CityName', 'ASC']
+          ]
+      });
+
+      return res.status(200).json({
+          success: true,
+          data: cities,
+          message: 'Cities searched successfully'
+      });
+  } catch (error) {
+      console.error('Error searching cities:', error);
+      return res.status(500).json({
+          success: false,
+          message: 'Error searching cities',
+          error: error.message
+      });
+  }
+});
+
 
 module.exports = router;
+
+

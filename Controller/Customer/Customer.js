@@ -3,6 +3,7 @@ const express = require('express');
 
 // controllers/customerLeadController.js
 const CustomerLeadForm = require('../../models/CustomerLeadForm');
+const VistaarBroilerDistribution = require('../../models/VistaarBroilerDistribution')
 
 
 
@@ -275,3 +276,149 @@ exports.createCustomerLead = async (req, res) => {
         });
     }
 };
+
+
+exports.createVistaarBroilerDistribution = async (req, res) => {
+    try {
+      const {
+        CustomerName,
+        MobileNumber,
+        whatsappNo,
+        Pincode,
+        StateName,
+        Location,
+        CurrentProfession,
+        InterestedState,
+        InterestedCity,
+        PreviousExposure,
+        SourceOfInformation,
+        OtherLocation,
+        extrafield2,
+        extrafield3,
+        extrafield4
+      } = req.body;
+  
+      // Basic required fields check
+      const basicRequiredFields = {
+        CustomerName,
+        MobileNumber,
+        CurrentProfession,
+        InterestedState,
+        InterestedCity,
+        PreviousExposure
+      };
+  
+      for (const [field, value] of Object.entries(basicRequiredFields)) {
+        if (!value && value !== false) {
+          return res.status(400).json({
+            success: false,
+            error: `${field} is required`
+          });
+        }
+      }
+  
+      // Mobile number validation
+      if (!/^\d{10}$/.test(MobileNumber)) {
+        return res.status(400).json({
+          success: false,
+          error: "Mobile number must be 10 digits"
+        });
+      }
+  
+      // WhatsApp number validation (if provided)
+      if (whatsappNo && !/^\d{10}$/.test(whatsappNo)) {
+        return res.status(400).json({
+          success: false,
+          error: "WhatsApp number must be 10 digits"
+        });
+      }
+  
+      // Pincode validation (if provided)
+      if (Pincode && !/^\d{6}$/.test(Pincode)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid pincode format"
+        });
+      }
+  
+      // Current Profession validation
+      const validCurrentProfessions = ["Service", "Business", "Others"];
+      if (!validCurrentProfessions.includes(CurrentProfession)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid CurrentProfession value"
+        });
+      }
+  
+      // Previous Exposure validation
+      if (typeof PreviousExposure !== 'boolean') {
+        return res.status(400).json({
+          success: false,
+          error: "PreviousExposure must be a boolean value"
+        });
+      }
+  
+      // Source of Information validation (if provided)
+      const validSourcesOfInformation = [
+        "Social Media",
+        "Employee Referral",
+        "Vistaar Team",
+        "Offline Market",
+        "Others"
+      ];
+      if (SourceOfInformation && !validSourcesOfInformation.includes(SourceOfInformation)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid SourceOfInformation value"
+        });
+      }
+  
+      // Create Vistaar Broiler Distribution lead
+      const vistaarBroilerDistribution = await VistaarBroilerDistribution.create({
+        CustomerName,
+        MobileNumber,
+        whatsappNo,
+        Pincode,
+        StateName,
+        Location,
+        CurrentProfession,
+        InterestedState,
+        InterestedCity,
+        PreviousExposure,
+        SourceOfInformation,
+        OtherLocation,
+        extrafield2,
+        extrafield3,
+        extrafield4
+      });
+  
+      return res.status(201).json({
+        success: true,
+        message: "Vistaar Broiler Distribution lead created successfully",
+        data: vistaarBroilerDistribution
+      });
+  
+    } catch (error) {
+      console.error('Error in createVistaarBroilerDistribution:', error);
+  
+      if (error.name === 'SequelizeValidationError') {
+        return res.status(400).json({
+          success: false,
+          error: error.errors.map(e => e.message)
+        });
+      }
+  
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        return res.status(409).json({
+          success: false,
+          error: 'Record already exists'
+        });
+      }
+  
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error"
+      });
+    }
+  };
+
