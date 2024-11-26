@@ -3,7 +3,8 @@ const express = require('express');
 
 // controllers/customerLeadController.js
 const CustomerLeadForm = require('../../models/CustomerLeadForm');
-const VistaarBroilerDistribution = require('../../models/VistaarBroilerDistribution')
+const VistaarBroilerDistribution = require('../../models/VistaarBroilerDistribution');
+const ChicksInquiry = require('../../models/ChicksInquiry');
 
 
 
@@ -278,6 +279,11 @@ exports.createCustomerLead = async (req, res) => {
 };
 
 
+
+
+
+
+
 exports.createVistaarBroilerDistribution = async (req, res) => {
     try {
       const {
@@ -421,4 +427,93 @@ exports.createVistaarBroilerDistribution = async (req, res) => {
       });
     }
   };
+
+
+  exports.createChicksInquiry = async (req, res) => {
+    try {
+      const {
+        CustomerName,
+        MobileNumber,
+        whatsappNo,
+        Occupation,
+        chicks_range
+      } = req.body;
+  
+      // Basic required fields check
+      const basicRequiredFields = {
+        CustomerName,
+        MobileNumber,
+        Occupation,
+        chicks_range
+      };
+  
+      for (const [field, value] of Object.entries(basicRequiredFields)) {
+        if (!value && value !== false) {
+          return res.status(400).json({
+            success: false,
+            error: `${field} is required`
+          });
+        }
+      }
+  
+      // Mobile number validation
+      if (!/^\d{10}$/.test(MobileNumber)) {
+        return res.status(400).json({
+          success: false,
+          error: "Mobile number must be 10 digits"
+        });
+      }
+  
+      // WhatsApp number validation (if provided)
+      if (whatsappNo && !/^\d{10}$/.test(whatsappNo)) {
+        return res.status(400).json({
+          success: false,
+          error: "WhatsApp number must be 10 digits"
+        });
+      }
+  
+      // Create Chicks Inquiry
+      const chicksInquiry = await ChicksInquiry.create({
+        CustomerName,
+        MobileNumber,
+        whatsappNo,
+        Occupation,
+        chicks_range
+      });
+  
+      return res.status(201).json({
+        success: true,
+        message: "Chicks inquiry created successfully",
+        data: chicksInquiry
+      });
+  
+    } catch (error) {
+      console.error('Error in createChicksInquiry:', error);
+  
+      if (error.name === 'SequelizeValidationError') {
+        return res.status(400).json({
+          success: false,
+          error: error.errors.map(e => e.message)
+        });
+      }
+  
+      if (error.name === 'SequelizeUniqueConstraintError') {
+        return res.status(409).json({
+          success: false,
+          error: 'Record already exists'
+        });
+      }
+  
+      return res.status(500).json({
+        success: false,
+        error: "Internal server error"
+      });
+    }
+  };
+
+
+
+
+
+
 
