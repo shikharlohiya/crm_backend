@@ -1,10 +1,11 @@
 // routes/customerLeadRoutes.js
 const express = require('express');
-
+const { Op } = require("sequelize");
 // controllers/customerLeadController.js
 const CustomerLeadForm = require('../../models/CustomerLeadForm');
 const VistaarBroilerDistribution = require('../../models/VistaarBroilerDistribution');
 const ChicksInquiry = require('../../models/ChicksInquiry');
+const ExcelJS = require('exceljs');
 
 
 
@@ -278,12 +279,6 @@ exports.createCustomerLead = async (req, res) => {
     }
 };
 
-
-
-
-
-
-
 exports.createVistaarBroilerDistribution = async (req, res) => {
     try {
       const {
@@ -510,6 +505,208 @@ exports.createVistaarBroilerDistribution = async (req, res) => {
       });
     }
   };
+
+  const buildFilterConditions = (query) => {
+    const conditions = {};
+    const {
+        source,
+        state,
+        EC_Shed_Plan,
+        project,
+        startDate,
+        endDate,
+        search
+    } = query;
+
+    if (source) conditions.Source = source;
+    if (state) conditions.StateName = state;
+    if (EC_Shed_Plan) conditions.EC_Shed_Plan = EC_Shed_Plan;
+    if (project) conditions.Project = project;
+
+    // Date range filter
+    if (startDate && endDate) {
+        conditions.createdAt = {
+            [Op.between]: [new Date(startDate + " 00:00:00"), new Date(endDate + " 23:59:59")]
+        };
+    }
+
+    // Global search across multiple fields
+    if (search) {
+        conditions[Op.or] = [
+            { CustomerName: { [Op.like]: `%${search}%` } },
+            { ContactNumber: { [Op.like]: `%${search}%` } },
+            { CustomerMailId: { [Op.like]: `%${search}%` } },
+            { location: { [Op.like]: `%${search}%` } },
+            { otherLocation: { [Op.like]: `%${search}%` } },
+            { pincode: { [Op.like]: `%${search}%` } }
+        ];
+    }
+
+    return conditions;
+};
+
+// Get customers with filters and pagination
+exports.getCustomers = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = parseInt(req.query.pageSize) || 10;
+        const offset = (page - 1) * pageSize;
+
+        const filterConditions = buildFilterConditions(req.query);
+
+        const { count, rows } = await CustomerLeadForm.findAndCountAll({
+            where: filterConditions,
+            limit: pageSize,
+            offset: offset,
+            order: [['createdAt', 'DESC']]
+        });
+        const totalCustomers = await CustomerLeadForm.count();
+
+        // Process the data to handle WhatsApp number logic
+        const formattedData = rows.map(lead => {
+            const leadData = lead.toJSON();
+            // If WhatsApp number is null, use ContactNumber
+            leadData.WhatsAppNumber = leadData.WhatsAppNumber || leadData.ContactNumber;
+            return leadData;
+        });
+
+        return res.status(200).json({
+            success: true,
+            data: formattedData,
+            pagination: {
+                totalItems: count,
+                totalPages: Math.ceil(count / pageSize),
+                currentPage: page,
+                pageSize: pageSize
+            },
+
+            summary: {
+              totalCustomers: totalCustomers,
+              
+          },
+            filters: {
+                source: req.query.source || null,
+                state: req.query.state || null,
+                EC_Shed_Plan: req.query.EC_Shed_Plan || null,
+                project: req.query.project || null,
+                dateRange: {
+                    startDate: req.query.startDate || null,
+                    endDate: req.query.endDate || null
+                },
+                search: req.query.search || null
+            }
+        });
+    } catch (error) {
+        console.error('Error fetching customers:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error fetching customer data',
+            error: error.message
+        });
+    }
+};
+
+// Export customers to Excel with filters
+exports.exportCustomers = async (req, res) => {
+    try {
+        const filterConditions = buildFilterConditions(req.query);
+
+        const customers = await CustomerLeadForm.findAll({
+            where: filterConditions,
+            order: [['createdAt', 'DESC']]
+        });
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Customer Leads');
+
+        // Define Excel columns based on EC_Shed_Plan
+        const baseColumns = [
+            { header: 'Customer Name', key: 'CustomerName', width: 20 },
+            { header: 'Contact Number', key: 'ContactNumber', width: 15 },
+            { header: 'WhatsApp Number', key: 'WhatsAppNumber', width: 15 },
+            { header: 'Email', key: 'CustomerMailId', width: 25 },
+            { header: 'State', key: 'StateName', width: 15 },
+            { header: 'Location', key: 'location', width: 20 },
+            { header: 'Other Location', key: 'otherLocation', width: 20 },
+            { header: 'Pincode', key: 'pincode', width: 10 },
+            { header: 'EC Shed Plan', key: 'EC_Shed_Plan', width: 20 },
+            { header: 'Project', key: 'Project', width: 15 },
+            { header: 'Investment Budget', key: 'Investment_Budget', width: 25 },
+            { header: 'Number of Sheds', key: 'NUmberOfShed', width: 15 },
+            { header: 'Source', key: 'Source', width: 15 },
+            { header: 'Remark', key: 'Remark', width: 30 },
+            { header: 'Created At', key: 'createdAt', width: 20 }
+        ];
+
+        const planningNewShedColumns = [
+            { header: 'Land Available', key: 'LandAvailable', width: 15 },
+            { header: 'Land Size', key: 'Land_Size', width: 15 },
+            { header: 'Unit', key: 'Unit', width: 10 },
+            { header: 'Electricity', key: 'Electricity', width: 15 },
+            { header: 'Water Availability', key: 'WaterAvailabilty', width: 15 },
+            { header: 'Approachable Road', key: 'ApproachableRoad', width: 15 }
+        ];
+
+        const openToShedColumns = [
+            { header: 'Integration Company', key: 'IntegrationCompany', width: 20 },
+            { header: 'Shed Size', key: 'ShedSize', width: 15 },
+            { header: 'Current Shed Direction', key: 'CurrentShedDirection', width: 20 },
+            { header: 'Electricity Phase', key: 'ElectricityPhase', width: 15 },
+            { header: 'Current Bird Capacity', key: 'CurrentBirdCapacity', width: 20 }
+        ];
+
+        // Set all columns
+        worksheet.columns = [...baseColumns, ...planningNewShedColumns, ...openToShedColumns];
+
+        // Add data rows with formatting
+        customers.forEach(customer => {
+            const customerData = customer.toJSON();
+            // Handle WhatsApp number logic
+            customerData.WhatsAppNumber = customerData.WhatsAppNumber || customerData.ContactNumber;
+            
+            // Format boolean values
+            customerData.LandAvailable = customerData.LandAvailable ? 'Yes' : 'No';
+            customerData.WaterAvailabilty = customerData.WaterAvailabilty ? 'Yes' : 'No';
+            customerData.ApproachableRoad = customerData.ApproachableRoad ? 'Yes' : 'No';
+            
+            // Format date
+            customerData.createdAt = customerData.createdAt ? 
+                new Date(customerData.createdAt).toLocaleString() : '';
+
+            worksheet.addRow(customerData);
+        });
+
+        // Style the header row
+        worksheet.getRow(1).font = { bold: true };
+        worksheet.getRow(1).fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: 'FFE0E0E0' }
+        };
+
+        // Set response headers
+        res.setHeader(
+            'Content-Type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+        res.setHeader(
+            'Content-Disposition',
+            `attachment; filename=CustomerLeads_${new Date().toISOString().split('T')[0]}.xlsx`
+        );
+
+        // Write to response
+        await workbook.xlsx.write(res);
+        res.end();
+
+    } catch (error) {
+        console.error('Error exporting customers:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Error exporting customer data',
+            error: error.message
+        });
+    }
+};
 
 
 
